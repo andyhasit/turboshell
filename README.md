@@ -130,7 +130,7 @@ Turboshell will create the following subdirectories:
 
 Do this how you like. I recommend [installing virtualenv](https://docs.python-guide.org/dev/virtualenvs/) and typing:
 
-````bash
+```bash
 pip install virtualenv
 virtualenv -p python3 ~/turboshell/virtualenv  # or wherever you want to create it
 ```
@@ -139,7 +139,7 @@ Do this even if you use **pyenv** or other such tool for managing your virtual e
 
 This virtual environment will only be activated:
 
-- When running the turboshell command*
+- When running a turboshell command\*
 - When installing packages used for your commands
 
 \* This is done automatically, and only for the scope of the command. Turboshell commands won't affect (or use) whatever virtual environment you may have active.
@@ -194,6 +194,10 @@ You should see some output which looks like this:
 
 Follow these instructions. If you ever move your turboshell directory, just run step 4 again.
 
+## Guide
+
+TODO: add examples of args and alias collector calls.
+
 ## Contributing
 
 PRs welcome. Please run flake8. 
@@ -203,4 +207,3 @@ If you're thinking of rewriting this using decorators, you'll get stung.
 ## Licence
 
 [MIT](https://opensource.org/licenses/MIT)
-
