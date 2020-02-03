@@ -28,12 +28,12 @@ class AliasCollector:
         if info:
             self.info(name, info)
 
-    def add_many(self, items):
+    def aliases(self, items):
         """Add a list of aliases"""
-        for name, command in items:
-            self.alias(name, command)
+        for entry in items:
+            self.alias(*entry)
 
-    def function(self, name, lines, info=None):
+    def func(self, name, lines, info=None):
         """Add a single function"""
         self.functions[name] = lines
         if info:
