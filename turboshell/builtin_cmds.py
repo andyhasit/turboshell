@@ -32,7 +32,9 @@ def configure(args):
     # We don't want to overwrite their whole file, just redefine the alias in case it points to an old location
     if os.path.isfile(alias_file):
         with open(alias_file, 'a') as fp:
-            fp.write('\nThe next line was added by configure command. It will be deleted on rebuild.')
+            fp.write("\n# These lines were added by configure command to ensure alias 'turboshell'\
+                     points to the correct file.")
+            fp.write('\n# They will be deleted on rebuild.')
             fp.write('\n{}\n'.format(filegen.turboshell_alias_line))
     else:
         filegen.generate_alias_file({}, {}, [])

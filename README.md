@@ -43,13 +43,14 @@ from turboshell import ac
 
 langs = {'FR': 'Bonjour', 'ES': 'Hola', 'EN': 'Hello'}
 
-def say_hello(lang, name):
+def say_hello(args):
+    lang, name = args
     print('{} {}!'.format(langs[lang], name))
 
-# Regitser function as a turboshell command
+# Register function as a turboshell command
 ac.cmd(say_hello)
 
-# Create alises:
+# Create aliases:
 ac.alias('hello', 'turboshell say_hello EN')
 ac.alias('hello-spanish', 'turboshell say_hello ES')
 ac.alias('hello-french', 'turboshell say_hello FR')
@@ -175,8 +176,6 @@ python turboshell -m configure
 You should see some output which looks like this:
 
 ```
-~/turboshell $
-
   ---------------------------------
   TURBOSHELL SUCCESSFULLY INSTALLED
   ---------------------------------
@@ -191,7 +190,6 @@ You should see some output which looks like this:
 
       turboshell.info
 
-~/turboshell $
 ```
 
 Follow these instructions. If you ever move your turboshell directory, just run step 4 again.
@@ -201,3 +199,8 @@ Follow these instructions. If you ever move your turboshell directory, just run 
 PRs welcome. Please run flake8. 
 
 If you're thinking of rewriting this using decorators, you'll get stung.
+
+## Licence
+
+[MIT](https://opensource.org/licenses/MIT)
+

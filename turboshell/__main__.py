@@ -5,8 +5,10 @@ This module gets run when you call "python -m turboshell"
 import os
 import sys
 from .utils import error, TURBOSHELL_USER_DIR
-from . import builtin_cmds  # noqa
 from .collector import ac
+
+# The following import collects the commands and aliases
+from . import builtin_cmds  # noqa
 
 
 def call_command(argv):
@@ -19,10 +21,10 @@ def call_command(argv):
     except IndexError:
         error('Use: "python -m turboshell cmd-name [...args]"')
 
-    # These imports trigger the adding of aliases to the alias_collector
-    import builtin_cmds  # noqa
+     
     if TURBOSHELL_USER_DIR and os.path.isdir(TURBOSHELL_USER_DIR):
         sys.path.append(TURBOSHELL_USER_DIR)
+        # As for builtin_cmds, this collects the commands and aliases
         import scripts  # noqa
 
     if name in ac.commands:
