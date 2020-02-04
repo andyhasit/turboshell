@@ -21,7 +21,6 @@ def call_command(argv):
     except IndexError:
         error('Use: "python -m turboshell cmd-name [...args]"')
 
-     
     if TURBOSHELL_USER_DIR and os.path.isdir(TURBOSHELL_USER_DIR):
         sys.path.append(TURBOSHELL_USER_DIR)
         # As for builtin_cmds, this collects the commands and aliases
