@@ -5,7 +5,7 @@ This module gets run when you call "python -m turboshell"
 import os
 import sys
 from .utils import error, TURBOSHELL_USER_DIR
-from .collector import ac
+from .ts import ts
 
 # The following import collects the commands and aliases
 from . import builtin_cmds  # noqa
@@ -26,8 +26,8 @@ def call_command(argv):
         # As for builtin_cmds, this collects the commands and aliases
         import scripts  # noqa
 
-    if name in ac.commands:
-        cmd = ac.commands[name]
+    if name in ts.commands:
+        cmd = ts.commands[name]
         cmd(args)
     else:
         error('Turboshell could not find command "{}"'.format(name))

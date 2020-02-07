@@ -1,1 +1,1 @@
-from .collector import ac  # noqa
+from .ts import ts  # noqa

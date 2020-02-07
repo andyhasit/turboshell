@@ -3,7 +3,7 @@ import sys
 import shutil
 from .file_generator import FileGenerator
 from .utils import TURBOSHELL_USER_DIR, ensure_dir_exists
-from .collector import ac
+from .ts import ts
 
 
 def configure(args):
@@ -57,9 +57,9 @@ def rebuild(args):
     Rebuilds the alias file.
     """
     filegen = FileGenerator(TURBOSHELL_USER_DIR)
-    filegen.generate_alias_file(ac.aliases, ac.functions, ac.info_entries)
+    filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries)
 
 
 # Just register the commands. Their aliases are set elsewhere.
-ac.cmd(configure)
-ac.cmd(rebuild)
+ts.command(configure)
+ts.command(rebuild)
