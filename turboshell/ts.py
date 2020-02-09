@@ -16,41 +16,44 @@ class TurboshellSingleton:
             - registers the function as a command
             - transforms the shell args passed to the function
         """
-        def wrap(f):
+        def wrap(original_function):
 
+            # Be careful not to assign over name as that makes it a local variable
+            cmd_name = name or original_function.__name__
             def wrapped_f(shell_args):
-                # Be careful not to assign over name as that makes it a local variable
-                cmd_name = name or f.__name__
                 if requesting_help(shell_args):
-                    print_help(f, positional, named, alias, cmd_name)
+                    print_help(original_function, positional, named, alias, cmd_name)
                 else:
                     try:
                         final_args = convert_args(shell_args, positional, named)
                         if final_args:
-                            f(**final_args)
+                            original_function(**final_args)
                         else:
-                            f()
-                    except (CmdArgException, CmdSpecificationException) as e:
-                        print(e.info)
+                            original_function()
+                    except CmdArgException as e:
+                        print('Bad command call')
+                        print(e.value)
+                    except CmdSpecificationException as e:
+                        print('Badly coded command')
+                        print(e.value)
 
-            self.command(wrapped_f, alias=alias, name=name)
+
+            self.command(wrapped_f, cmd_name, alias=alias)
 
             # In case we inspect the function's name elsewhere...
-            wrapped_f.__name__ = f.__name__
+            wrapped_f.__name__ = original_function.__name__
 
             return wrapped_f
 
         return wrap
 
-    def command(self, function, alias=None, info=None, name=None):
+    def command(self, function, name, alias=None, info=None):
         """
         Registers a command as "turboshell [name]" where name is the name of the function.
         @name if provided, sets the name of the command, else name of function is used.
         @alias creates an alias for the command.
         @info is only used if alias is also provided.
         """
-        if name is None:
-            name = function.__name__
         self.commands[name] = function
         if alias:
             self.alias(alias, 'turboshell ' + name)

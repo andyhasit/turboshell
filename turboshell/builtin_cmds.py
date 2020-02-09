@@ -6,7 +6,8 @@ from .utils import TURBOSHELL_USER_DIR, ensure_dir_exists
 from .ts import ts
 
 
-def configure(args):
+@ts.cmd()
+def configure():
     """
     This command is called by user during installation, and whenever their turboshell directory moves.
     """
@@ -52,14 +53,10 @@ def configure(args):
     print("")
 
 
-def rebuild(args):
+@ts.cmd()
+def rebuild():
     """
     Rebuilds the alias file.
     """
     filegen = FileGenerator(TURBOSHELL_USER_DIR)
     filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries)
-
-
-# Just register the commands. Their aliases are set elsewhere.
-ts.command(configure)
-ts.command(rebuild)
