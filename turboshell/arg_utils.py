@@ -88,10 +88,12 @@ def convert_args(shell_args, expected_positional=None, expected_named=None, expe
     # Collect named args.
     for arg_spec in expected_named:
         name = arg_spec.name
-        if name in received_named:
-            arg_spec.validate(received_named[name])
-            final_args[name] = arg_spec.value
-            del received_named[name]
+        first_letter = name[0]
+        for n in name, first_letter:
+            if n in received_named:
+                arg_spec.validate(received_named[n])
+                final_args[name] = arg_spec.value
+                del received_named[n]
 
     # Warn if required named args are unfulfilled.
     for arg_spec in expected_named:

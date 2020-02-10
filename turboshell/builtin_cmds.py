@@ -3,7 +3,7 @@ import sys
 import shutil
 from .file_generator import FileGenerator
 from .utils import TURBOSHELL_USER_DIR, ensure_dir_exists
-from .ts import ts
+from .turboshell import ts
 
 
 @ts.cmd()

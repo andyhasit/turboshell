@@ -8,9 +8,9 @@ class TurboshellSingleton:
         self.aliases = {}
         self.functions = {}
         self.commands = {}
-        self.info_entries = []
+        self.info_entries = {}
 
-    def cmd(self, alias=None, positional=None, named=None, name=None, options=None):
+    def cmd(self, alias=None, args=None, kwargs=None, name=None, options=None):
         """
         A decorator which:
             - registers the function as a command
@@ -22,21 +22,19 @@ class TurboshellSingleton:
             cmd_name = name or original_function.__name__
             def wrapped_f(shell_args):
                 if requesting_help(shell_args):
-                    print_help(original_function, positional, named, alias, cmd_name)
+                    print_help(original_function, args, kwargs, alias, cmd_name)
                 else:
                     try:
-                        final_args = convert_args(shell_args, positional, named)
+                        final_args = convert_args(shell_args, args, kwargs)
                         if final_args:
                             original_function(**final_args)
                         else:
                             original_function()
                     except CmdArgException as e:
-                        print('Bad command call')
-                        print(e.value)
+                        print(e)
                     except CmdSpecificationException as e:
-                        print('Badly coded command')
-                        print(e.value)
-
+                        print('Error with command definition')
+                        print(e)
 
             self.command(wrapped_f, cmd_name, alias=alias)
 
@@ -79,7 +77,7 @@ class TurboshellSingleton:
 
     def info(self, title, text):
         """Add an entry for the info command"""
-        self.info_entries.append((title, text))
+        self.info_entries[title] = text
 
 
 # This is a global object to which all modules add their aliases

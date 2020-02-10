@@ -1,1 +1,1 @@
-from .ts import ts  # noqa
+from .turboshell import ts  # noqa

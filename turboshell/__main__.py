@@ -5,7 +5,7 @@ This module gets run when you call "python -m turboshell"
 import os
 import sys
 from .utils import error, TURBOSHELL_USER_DIR
-from .ts import ts
+from .turboshell import ts
 
 # The following import collects the commands and aliases
 from . import builtin_cmds  # noqa

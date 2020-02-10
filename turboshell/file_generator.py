@@ -62,8 +62,8 @@ class FileGenerator:
         add("# Built-in aliases:")
         add(" ")
         add(self.turboshell_alias_line)
-        add("alias turboshell.rebuild='turboshell rebuild && source {}'".format(self.definitions_file))
-        add("alias turboshell.reload='source {}'".format(self.definitions_file))
+        add("alias ts.rebuild='turboshell rebuild && source {}'".format(self.definitions_file))
+        add("alias ts.reload='source {}'".format(self.definitions_file))
         add(" ")
 
     def _add_custom_aliases(self, aliases):
@@ -86,23 +86,63 @@ class FileGenerator:
         add(" ")
 
     def _add_info_function(self, info_entries):
+        """
+        Creates the ts.info bash function.
+        """
         add = self.lines.append
-        echo = lambda line: add(" echo '  {}'".format(line))
+        
+        def echo(line): 
+            add(" echo '  {}'".format(line))
+
+        def add_group(items):
+            """items must be list of tuples"""
+            if len(items) == 0:
+                return
+            for cmd, info in sorted(items, key=lambda x: x[0]):
+                space = (longest - len(cmd)) * ' '
+                print(cmd, len(space))
+                echo("{} {}| {}".format(cmd, space, info))
+            echo('')
+
+        def find_entries(predicate):
+            """returns list of tuples for entries whose key matches predicate"""
+            return [(k, v) for k,v in info_entries.items() if predicate(k)]
+
+        # Add the entries for built in functions
+        self._add_builtins_info(info_entries)
+
+        # Get longest cmd text so we know how much to pad everything by
+        longest = max(len(e) for e in info_entries.keys())
+
         add("# Info function:")
         add('')
-        add("function turboshell.info {")
+        add("function ts.info {")
         echo('')
-        echo('Alias file last built: {}'.format(datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
+        echo('Alias file:  {}'.format(self.definitions_file))
+        echo('Rebuilt on:  {}'.format(datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
         echo('')
-        info_entries.append(('turboshell.info', 'Shows info on commands'))
-        info_entries.append(('turboshell.reload', 'Reloads the aliases in current shell'))
-        info_entries.append(('turboshell.rebuild', 'Rebuilds and reloads the aliases in current shell'))
         echo('Commands:')
         echo('')
-        # Add padded line for each entry
-        longest = max(len(e[0]) for e in info_entries)
-        for cmd, info in sorted(info_entries, key=lambda x: x[0]):
-            space = (longest - len(cmd)) * ' '
-            echo("{} {}| {}".format(cmd, space, info))
-        echo('')
+
+        # Write entries for built in commands first
+        builtin_entries = find_entries(lambda cmd: cmd.startswith('ts.'))
+        add_group(builtin_entries)
+
+        # Then for ungrouped entries
+        ungrouped_entries = find_entries(lambda cmd: '.' not in cmd)
+        add_group(ungrouped_entries)
+
+        # Then for groups
+        group_prefixes = set(k.split('.')[0] for k in info_entries if '.' in k and not k.startswith('ts.'))
+        for prefix in group_prefixes:
+            group = find_entries(lambda cmd: cmd.startswith(prefix))
+            add_group(group)
+
         add("}")
+
+
+
+    def _add_builtins_info(self, info_entries):
+        info_entries['ts.info'] = 'Shows info on commands'
+        info_entries['ts.reload'] = 'Reloads the aliases in current shell'
+        info_entries['ts.rebuild'] = 'Rebuilds and reloads the aliases in current shell'
