@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from .utils import write_to_file, ensure_dir_exists
+from .utils import write_to_file, ensure_dir_exists, extract_stubs
 
 
 class FileGenerator:
@@ -15,6 +15,7 @@ class FileGenerator:
         self.script_file = os.path.join(self.generated_files_dir, 'turboshell')
         self.definitions_file = os.path.join(self.generated_files_dir, 'definitions')
         self.lines = []
+        self.unique_alises = set()
 
     def generate_alias_file(self, aliases, functions, info_entries):
         ensure_dir_exists(self.generated_files_dir)
@@ -47,6 +48,7 @@ class FileGenerator:
         self._add_custom_aliases(aliases)
         self._add_custom_functions(functions)
         self._add_info_function(info_entries)
+        self._add_stubs()
         write_to_file(self.definitions_file, self.lines)
 
     def _add_headers(self):
@@ -66,6 +68,7 @@ class FileGenerator:
         add("# Built-in aliases:")
         add(" ")
         add(self.turboshell_alias_line)
+        add("alias ts.activate-venv='source {}/bin/activate'".format(self.venv_dir))
         add("alias ts.rebuild='turboshell rebuild && source {}'".format(self.definitions_file))
         add("alias ts.reload='source {}'".format(self.definitions_file))
         add(" ")
@@ -75,6 +78,7 @@ class FileGenerator:
         add("# Your aliases:")
         add(" ")
         for name, cmd in aliases.items():
+            self.unique_alises.add(name)
             add("alias {}='{}'".format(name, cmd))
         add(" ")
 
@@ -83,11 +87,39 @@ class FileGenerator:
         add("# Your functions:")
         add(" ")
         for name, body in functions.items():
+            self.unique_alises.add(name)
             add("function " + name + " {")
             for line in body:
                 add("  " + line)
             add("}")
         add(" ")
+
+    def _add_stubs(self):
+        """
+        Creates stubs for all intermediate aliases, e.g.
+
+        if we have aliases:
+
+            p.show
+            p.new
+
+        This will create a stub for 'p.' as:
+    
+            alias p.=ts.stub
+        """
+        add = self.lines.append
+        stubs = set()
+        for alias in self.unique_alises:
+            for stub in extract_stubs(alias):
+                if stub not in self.unique_alises:
+                    stubs.add(stub)
+        if len(stubs):
+            add("# Stubs:")
+            add(" ")
+            add("alias ts.stub='echo stub'".format(stub))
+            for stub in stubs:
+                add("alias {}=ts.stub".format(stub))
+            add(" ")
 
     def _add_info_function(self, info_entries):
         """
@@ -145,5 +177,6 @@ class FileGenerator:
 
     def _add_builtins_info(self, info_entries):
         info_entries['ts.info'] = 'Shows info on commands'
+        info_entries['ts.activate-venv'] = 'Activates the virtual environment'
         info_entries['ts.reload'] = 'Reloads the aliases in current shell'
         info_entries['ts.rebuild'] = 'Rebuilds and reloads the aliases in current shell'

@@ -24,3 +24,12 @@ def ensure_dir_exists(path):
 
 def call(cmd, shell=True, executable='/bin/bash'):
     return subprocess.call(cmd, shell, executable)
+
+    
+def extract_stubs(alias):
+    combinations = []
+    current = ''
+    for bit in alias.split('.')[:-1]:
+        current += bit + '.' 
+        combinations.append(current)
+    return combinations
