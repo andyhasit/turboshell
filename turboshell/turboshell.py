@@ -20,6 +20,7 @@ class TurboshellSingleton:
 
             # Be careful not to assign over name as that makes it a local variable
             cmd_name = name or original_function.__name__
+
             def wrapped_f(shell_args):
                 if requesting_help(shell_args):
                     print_help(original_function, args, kwargs, alias, cmd_name)

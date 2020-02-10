@@ -18,7 +18,11 @@ class FileGenerator:
 
     def generate_alias_file(self, aliases, functions, info_entries):
         ensure_dir_exists(self.generated_files_dir)
+        start = datetime.now()
         self._build_alias_file(aliases, functions, info_entries)
+        end = datetime.now()
+        time = (end - start).microseconds / 1000
+        print("Generated {} aliases in {} ms".format(len(aliases), time))
 
     def generate_turboshell_script(self):
         """
@@ -90,8 +94,8 @@ class FileGenerator:
         Creates the ts.info bash function.
         """
         add = self.lines.append
-        
-        def echo(line): 
+
+        def echo(line):
             add(" echo '  {}'".format(line))
 
         def add_group(items):
@@ -100,13 +104,12 @@ class FileGenerator:
                 return
             for cmd, info in sorted(items, key=lambda x: x[0]):
                 space = (longest - len(cmd)) * ' '
-                print(cmd, len(space))
                 echo("{} {}| {}".format(cmd, space, info))
             echo('')
 
         def find_entries(predicate):
             """returns list of tuples for entries whose key matches predicate"""
-            return [(k, v) for k,v in info_entries.items() if predicate(k)]
+            return [(k, v) for k, v in info_entries.items() if predicate(k)]
 
         # Add the entries for built in functions
         self._add_builtins_info(info_entries)
@@ -139,8 +142,6 @@ class FileGenerator:
             add_group(group)
 
         add("}")
-
-
 
     def _add_builtins_info(self, info_entries):
         info_entries['ts.info'] = 'Shows info on commands'
