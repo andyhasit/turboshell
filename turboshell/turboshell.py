@@ -1,4 +1,3 @@
-from collections import defaultdict
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdSpecificationException
 
@@ -63,27 +62,41 @@ class TurboshellSingleton:
                 self.info(alias, info, group)
 
     def alias(self, name, command, info=None, group=None):
-        """Add a single alias"""
+        """
+        Add a single alias.
+        """
         self.aliases[name] = command
         if info:
             self.info(name, info, group)
 
     def aliases(self, items):
-        """Add a list of aliases"""
+        """
+        Add a list of aliases.
+        """
         for entry in items:
             self.alias(*entry)
 
     def func(self, name, lines, info=None, group=None):
-        """Add a single function"""
+        """
+        Add a single function.
+        """
         self.functions[name] = lines
         if info:
             self.info(name, info, group)
 
     def info(self, alias, text, group=None):
-        """Add an entry for the info command"""
+        """
+        Add an entry for the info command.
+        """
         if group:
             self.alias_groups[alias] = group
         self.info_entries[alias] = text
+
+    def group(self, name, lines):
+        """
+        Create a group for grouping info lines.
+        """
+        self.group_info[name] = lines
 
 
 # This is a global object to which all modules add their aliases

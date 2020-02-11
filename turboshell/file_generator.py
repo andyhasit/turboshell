@@ -20,7 +20,7 @@ class FileGenerator:
     def generate_alias_file(self, aliases, functions, info_entries, alias_groups, group_info):
         ensure_dir_exists(self.generated_files_dir)
         start = datetime.now()
-        self._build_alias_file(aliases, functions, info_entries,  alias_groups, group_info)
+        self._build_alias_file(aliases, functions, info_entries, alias_groups, group_info)
         end = datetime.now()
         time = (end - start).microseconds / 1000
         print("Generated {} aliases in {} ms".format(len(aliases), time))
@@ -96,16 +96,8 @@ class FileGenerator:
 
     def _add_stubs(self):
         """
-        Creates stubs for all intermediate aliases, e.g.
-
-        if we have aliases:
-
-            p.show
-            p.new
-
-        This will create a stub for 'p.' as:
-    
-            alias p.=ts.stub
+        Creates stubs for all intermediate aliases to improve autocompletion.
+        Experimental, may not be useful.
         """
         add = self.lines.append
         stubs = set()
@@ -165,19 +157,18 @@ class FileGenerator:
         add_group(builtin_entries)
 
         # Then for ungrouped entries
-        ungrouped_entries = find_entries(lambda alias: alias not in alias_groups)
+        ungrouped_entries = find_entries(lambda alias: alias not in alias_groups and not alias.startswith('ts.'))
         add_group(ungrouped_entries)
 
         # Then for grouped_entries
         group_names = set(alias_groups.values())
         for group in sorted(group_names):
-            print(group)
             echo('')
+            echo('{}'.format(group))
+            echo('-' * len(group))
             if group in group_info:
                 for line in group_info[group]:
                     echo(line)
-            else:
-                echo('-- {} --'.format(group))
             echo('')
             group = find_entries(lambda alias: alias in alias_groups and alias_groups[alias] == group)
             add_group(group)
