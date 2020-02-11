@@ -38,7 +38,7 @@ def configure():
             fp.write('\n# They will be deleted on rebuild.')
             fp.write('\n{}\n'.format(filegen.turboshell_alias_line))
     else:
-        filegen.generate_alias_file({}, {}, [])
+        filegen.generate_alias_file({}, {}, {}, {}, {})
 
     print("")
     print("  ---------------------------------")
@@ -59,4 +59,4 @@ def rebuild():
     Rebuilds the alias file.
     """
     filegen = FileGenerator(TURBOSHELL_USER_DIR)
-    filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries)
+    filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries, ts.alias_groups, ts.group_info)

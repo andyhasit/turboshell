@@ -1,3 +1,4 @@
+from collections import defaultdict
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdSpecificationException
 
@@ -9,8 +10,10 @@ class TurboshellSingleton:
         self.functions = {}
         self.commands = {}
         self.info_entries = {}
+        self.group_info = {}
+        self.alias_groups = {}
 
-    def cmd(self, alias=None, args=None, kwargs=None, name=None, options=None):
+    def cmd(self, alias=None, args=None, kwargs=None, name=None, options=None, info=None, group=None):
         """
         A decorator which:
             - registers the function as a command
@@ -37,7 +40,7 @@ class TurboshellSingleton:
                         print('Error with command definition')
                         print(e)
 
-            self.command(wrapped_f, cmd_name, alias=alias)
+            self.command(wrapped_f, cmd_name, alias=alias, info=info, group=group)
 
             # In case we inspect the function's name elsewhere...
             wrapped_f.__name__ = original_function.__name__
@@ -46,7 +49,7 @@ class TurboshellSingleton:
 
         return wrap
 
-    def command(self, function, name, alias=None, info=None):
+    def command(self, function, name, alias=None, info=None, group=None):
         """
         Registers a command as "turboshell [name]" where name is the name of the function.
         @name if provided, sets the name of the command, else name of function is used.
@@ -57,28 +60,30 @@ class TurboshellSingleton:
         if alias:
             self.alias(alias, 'turboshell ' + name)
             if info:
-                self.info(alias, info)
+                self.info(alias, info, group)
 
-    def alias(self, name, command, info=None):
+    def alias(self, name, command, info=None, group=None):
         """Add a single alias"""
         self.aliases[name] = command
         if info:
-            self.info(name, info)
+            self.info(name, info, group)
 
     def aliases(self, items):
         """Add a list of aliases"""
         for entry in items:
             self.alias(*entry)
 
-    def func(self, name, lines, info=None):
+    def func(self, name, lines, info=None, group=None):
         """Add a single function"""
         self.functions[name] = lines
         if info:
-            self.info(name, info)
+            self.info(name, info, group)
 
-    def info(self, title, text):
+    def info(self, alias, text, group=None):
         """Add an entry for the info command"""
-        self.info_entries[title] = text
+        if group:
+            self.alias_groups[alias] = group
+        self.info_entries[alias] = text
 
 
 # This is a global object to which all modules add their aliases

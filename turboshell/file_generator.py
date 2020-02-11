@@ -17,10 +17,10 @@ class FileGenerator:
         self.lines = []
         self.unique_alises = set()
 
-    def generate_alias_file(self, aliases, functions, info_entries):
+    def generate_alias_file(self, aliases, functions, info_entries, alias_groups, group_info):
         ensure_dir_exists(self.generated_files_dir)
         start = datetime.now()
-        self._build_alias_file(aliases, functions, info_entries)
+        self._build_alias_file(aliases, functions, info_entries,  alias_groups, group_info)
         end = datetime.now()
         time = (end - start).microseconds / 1000
         print("Generated {} aliases in {} ms".format(len(aliases), time))
@@ -42,12 +42,12 @@ class FileGenerator:
     def turboshell_alias_line(self):
         return "alias turboshell='bash {}'".format(self.script_file)
 
-    def _build_alias_file(self, aliases, functions, info_entries):
+    def _build_alias_file(self, aliases, functions, info_entries, alias_groups, group_info):
         self._add_headers()
         self._add_builtins()
         self._add_custom_aliases(aliases)
         self._add_custom_functions(functions)
-        self._add_info_function(info_entries)
+        self._add_info_function(info_entries, alias_groups, group_info)
         self._add_stubs()
         write_to_file(self.definitions_file, self.lines)
 
@@ -119,9 +119,10 @@ class FileGenerator:
             add("alias ts.stub='echo stub'".format(stub))
             for stub in stubs:
                 add("alias {}=ts.stub".format(stub))
+                # add("complete -F _longopt -o nospace {}".format(stub))
             add(" ")
 
-    def _add_info_function(self, info_entries):
+    def _add_info_function(self, info_entries, alias_groups, group_info):
         """
         Creates the ts.info bash function.
         """
@@ -134,9 +135,9 @@ class FileGenerator:
             """items must be list of tuples"""
             if len(items) == 0:
                 return
-            for cmd, info in sorted(items, key=lambda x: x[0]):
-                space = (longest - len(cmd)) * ' '
-                echo("{} {}| {}".format(cmd, space, info))
+            for alias, info in sorted(items, key=lambda x: x[0]):
+                space = (longest - len(alias)) * ' '
+                echo("{} {}| {}".format(alias, space, info))
             echo('')
 
         def find_entries(predicate):
@@ -146,7 +147,7 @@ class FileGenerator:
         # Add the entries for built in functions
         self._add_builtins_info(info_entries)
 
-        # Get longest cmd text so we know how much to pad everything by
+        # Get longest alias text so we know how much to pad everything by
         longest = max(len(e) for e in info_entries.keys())
 
         add("# Info function:")
@@ -160,17 +161,25 @@ class FileGenerator:
         echo('')
 
         # Write entries for built in commands first
-        builtin_entries = find_entries(lambda cmd: cmd.startswith('ts.'))
+        builtin_entries = find_entries(lambda alias: alias.startswith('ts.'))
         add_group(builtin_entries)
 
         # Then for ungrouped entries
-        ungrouped_entries = find_entries(lambda cmd: '.' not in cmd)
+        ungrouped_entries = find_entries(lambda alias: alias not in alias_groups)
         add_group(ungrouped_entries)
 
-        # Then for groups
-        group_prefixes = set(k.split('.')[0] for k in info_entries if '.' in k and not k.startswith('ts.'))
-        for prefix in group_prefixes:
-            group = find_entries(lambda cmd: cmd.startswith(prefix))
+        # Then for grouped_entries
+        group_names = set(alias_groups.values())
+        for group in sorted(group_names):
+            print(group)
+            echo('')
+            if group in group_info:
+                for line in group_info[group]:
+                    echo(line)
+            else:
+                echo('-- {} --'.format(group))
+            echo('')
+            group = find_entries(lambda alias: alias in alias_groups and alias_groups[alias] == group)
             add_group(group)
 
         add("}")
