@@ -4,258 +4,134 @@
 
 ## What does it do?
 
-Turboshell is a *tool* which lets you do two things:
+Turboshell makes it easy to:
 
-#### 1. Generate shell aliases using python
+1. Generate shell aliases
+2. Write commands in Python
 
-The following code:
+## Example
 
-```python
-from turboshell import ac
-
-for ext in ['py', 'js']:
-    ac.alias(
-        'grep-{}'.format(ext), # the alias 
-        'grep -r --include=*.{}'.format(ext) # the command
-    )
-```
-
-Results in these aliases:
-
-```bash
-alias grep-js='grep -r --include=*.js'
-alias grep-py='grep -r --include=*.py'
-```
-
-Which you can use in the shell like so:
-
-```bash
-$ grep-py expr /path/to/files
-```
-
-There is also an option to add info to aliases (see further down).
-
-#### 2. Write shell commands in Python
-
-The following code:
+Once installed, you can write code like this in a Python file:
 
 ```python
-from turboshell import ac
+from turboshell import ts
 
-langs = {'FR': 'Bonjour', 'ES': 'Hola', 'EN': 'Hello'}
+# Create a normal shell alias:
+ts.alias('grep.js', 'grep -r --exclude-dir=node_modules --include=*.js')
 
-def say_hello(args):
-    lang, name = args
-    print('{} {}!'.format(langs[lang], name))
-
-ac.cmd(say_hello) # Registers a function as a turboshell command
-
-ac.alias('hello', 'turboshell say_hello EN')
-ac.alias('hello-spanish', 'turboshell say_hello ES')
-ac.alias('hello-french', 'turboshell say_hello FR')
+# Create a turboshell command, and give it an alias:
+@ts.cmd(alias='hello', positional=['name!'])
+def say_hello(name):
+    print('Hello ' + name)
 ```
 
-Results in these aliases:
+Back in your shell run:
 
 ```bash
-alias hello='turboshell say_hello'
-alias hello-spanish='turboshell say_hello ES'
-alias hello-french='turboshell say_hello FR'
+$ ts.rebuild
 ```
 
-Which you can use in the shell like so:
+You will now have two new aliases available in your current (and any new) shell session:
 
 ```bash
-$ hello Mike
-Hello Mike!
-$ hello-french Anabelle
-Bonjour Anabelle!
+$ grep.js
+[results of grep...]
+$ hello Joe
+Hello Joe
 ```
 
-You don't *need* Turboshell to point an alias to a Python script. Turboshell just automates the wiring for you (reloading, handling args, virtual environments etc...) so you can do it in a snap.
+The `grep.js` alias just points to the shell's `grep` command with options preset, its a normal alias.
 
-## How does that help me?
+The `hello` alias on runs our python function within a virtual environment, checking and passing arguments to it.
 
-#### 1. Productivity
+#### Similar tools
 
-Aliases let you type commands faster, with less typos and without having to remember all the arguments. Generally, the more commands you can replace with aliases, the faster you can work.
+This may look a bit like [click](https://palletsprojects.com/p/click/) or [invoke](), but there's a difference. To call a command created with either of those you need to:
 
-The difficulty is:
+1. cd to the right directory
+2. Activate the right virtual environment
+3. Type something ugly like `python hello.py --name Joe`
 
-1. Managing a large numbers of aliases in text files is rather clunky.
-2. Its easy to forget what aliases you created and how to use them.
-
-By generating aliases with code rather than working directly with a text file, it becomes easy to maintain large sets of similar aliases, and generally organise them better.
-
-You can build sets aliases with data embedded for lists projects, clients, weekdays, servers etc...
+Turboshell on the other hand installs a command which does all this for you. You simply pass the name of your command and any arguments:
 
 ```bash
-cd.project1                        # cd to wherever project1 is
-log-time.wednesday.project2 2:20   # log 2h20m to project2 for Wednesday
-ssh.client2.live                   # ssh into whatever client2's live server is
-weather.thursday                   # print weather for Thursday
+$ turboshell say_hello Joe
 ```
 
-You get the idea. Its quicker to hit tab than to full type out args, so the more you can do this, the better. 
+You can also create an even shorter alias at the point of defining the command, or after.
 
-Ps: your shell can load 1000s of aliases in milliseconds without any kind of lag.
 
-#### 2. Solve problems quicker
 
-Ever get stuck trying to pipe 3 commands with crazy arguments together to produce a result?
+commands like that too a similar manner , but the assumption is that you are actually trying to be productive and want to be able to call your commands with as little typing as possible.
 
-With Turboshell you can bind an alias to a Python function in under 10 seconds. Effectively this means you can replace problematic parts of a command chains with python functions, and get the right result quicker.
+Turboshell on the other hand assumes you want a permanent shell alias for the commands you write.
 
-#### 3. Write more useful commands
+With Turboshell you can type the alias from any directory. The virtual environment is loaded invisibly (and doesn't touch any virtual environment you have active when calling the command).
 
-Once you have a mechanism in place to:
+Click and invoke are tools for creating powerful command interfaces.
 
-1. Quickly create new shell commands 
-2. Generate sets of aliases for those
+Turboshell has a different goal to click or invoke: productivity in the shell.
 
-You will hopefully be tempted to write more and more useful commands for the kind of work you do.
+## Why generate shell aliases?
 
-You have the full power of python and all its libraries behind you, so you can make commands which:
+Aliases make us more productive by reducing the number of arguments we have to type (or even remember):
 
-* Work with files and directories (locally or over ssh using [paramiko](http://docs.paramiko.org/en/stable/api/client.html))
-* Pipe in and out of other commands using [subprocess](https://docs.python.org/3/library/subprocess.html)
+
+```bash
+$ grep -r --exclude-dir=node_modules --include=*.js hello
+...vs
+$ grep.js hello
+```
+
+You can also create aliases which combine commands, e.g. print the git status of another project without changing directory:
+
+```bash
+$ alias gitstat.project1='cd /path/to/project1 && git status && cd -'
+```
+
+With a bit of imagination, you'll find there are 100s of individual aliases you could create to make you more productive in the shell.
+
+But creating aliases like these for every combination of file we might want to grep, or every git repository on our machine, is a lot of work.
+
+Turboshell makes it trivially easily generate sets of aliases based on lists of projects, clients, directories, user names, email accounts, servers, weekdays, etc...
+
+## Why write commands in python?
+
+What if you want combinations of file extensions for your grep alias?
+
+```bash
+grep.py
+grep.css
+grep.js-html
+grep.js-html-css
+```
+
+That's clearly going to get messy. Better create a command which accepts the file extension(s) as a first argument, let's call it **gerp**:
+
+```bash
+$ gerp js hello             # search js files only
+$ gerp js-html-css hello    # search all js, html and css files
+```
+
+For this to work, our command must convert the first arg to grep syntax, which differs according to whether we specify one or more file types:
+
+```
+"gerp js"        >>   "grep -r --include=*.js"
+"gerp js-html"   >>   "grep -r --include=*.{js,html,css}""
+```
+
+This is really basic string manipulation, but give this a try in bash script, and then in Python. Then add some validation. Then a unit test. Then use the same list of file types for a different command...
+
+Writing commands in Python instead of bash is not only a hell of a lot easier, but you have the full power of Python's libraries at your fingertips:
+
+* Work with files and directories...
+* Work with csv, json, databases, spreadsheets...
+* Call other shell commands with subprocess
+* Do things over ssh using [paramiko](http://docs.paramiko.org/en/stable/api/client.html)
+* Work with git repositories using [gitpython](https://gitpython.readthedocs.io/en/stable/index.html)
 * Connect to APIs using [requests](https://requests.readthedocs.io/en/master/)
 * Scrape from web pages using [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
-
-Your imagination is the only limit! Your command library will also have its own virtual environment.
-
-## How does it work?
-
-Once you've installed it (see **Installation** below) you get the following command in your shell:
-
-##### turboshell.info
-
-This prints out some info including the list of available commands. You can add to this from your Python code (see **Manual** below).
-
-##### turboshell.rebuild
-
-This command will:
-
-1. Activate the virtual environment
-2. Load all the Python code in your **scripts** module
-3. Collect all the aliases
-4. Write those to a file
-5. Source from that file to bring the newly written aliase into the current shell session. 
-
-During installation you'll be told to source from that file in your **.bashrc** file (or equivalent) which ensures these aliases are available in new shell sessions.
-
-##### turboshell.reload
-
-This is just an alias for `source /path/to/generated/alias/file`. Use this command if you called `turboshell.rebuild` in another shell session and want to reload the new aliases into the current session.
-
-##### turboshell  cmd-name  [args]
-
-This command will:
-
-1. Activate the virtual environment (in a new shell context, so doesn't affect your active shell)
-2. Load all the Python code in your **scripts** module
-3. Find the function which you registered with the same name.
-4. Call that function, passing the command line arguments as a list of strings.
-
-## Manual
-
-### Scripts
-
-TODO: flesh out.
-
-### Commands
-
-You create a command (i.e. make it callable with `turboshell cmd-name`) by defining a function and passing it to `ac.cmd()`. Note that the function must take a single parameter which will be a list of strings.
-
-```python
-def say_hello(args):
-    pass
-
-ac.cmd(say_hello)
-```
-
-This registers the function using its name. If you want a different name, perhaps to avoid clashes with a command in a different module, you can specify a name like this:
-
-```python
-ac.cmd(say_hello, name='my-hello-cmd')
-```
-
-The name is usually not so relevant as you will create an alias for it.
-
-### Aliases
-
-You create aliases to shell commands like so:
-
-```python
-ac.alias('grep-py', 'grep -r --include=*.{py}')
-```
-
-To create an alias for a command defined in turboshell, simply set the command to `turboshell cmd-name`:
-
-```python
-ac.alias('hello', 'turboshell say_hello')
-ac.alias('hello-spanish', 'turboshell say_hello ES')
-```
-
-Just like normal aliases, you can preset some parameters in the alias if your function handles them:
-```python
-ac.alias('hello-spanish', 'turboshell say_hello ES')
-ac.alias('hello-spanish', 'turboshell say_hello FR')
-```
-
-
-You can also creating an alias without parameters at the same time as passing a command.
-
-```python
-ac.cmd(say_hello, 'hello')
-```
-
-### Info
-
-The `turboshell.info` command prints something like this:
-
-```
-  turboshell.info    | Shows info on commands
-  turboshell.rebuild | Rebuilds and reloads the aliases in current shell
-  turboshell.reload  | Reloads the aliases in current shell
-```
-
-You can add items in there by providing an extra string to `ac.alias()`:
-
-```python
-ac.alias('hello', 'turboshell say_hello', 'Prints hello. Args: name.')
-```
-
-Or if declaring the alias directly in the call to `ac.cmd()`:
-
-```python
-ac.cmd(say_hello, 'hello', 'Prints hello. Args: name.')
-```
-
-Note that for `cmd()` the info is only used if alias is specified. The signature of `cmd` is:
-
-```python
-def cmd(self, function, alias=None, info=None, name=None):
-    pass
-```
-
-You must provide arguments in the correct sequence, or specify keyword args as Python's [rules](https://realpython.com/python-kwargs-and-args/):
-
-```python
-ac.cmd(say_hello, 'hello', name='my-hello-cmd', info='Prints hello. Args: name.')
-```
-
-Finally, you may explicitly add info entries separately from aliases:
-
-```python
-ac.info('hello-[lang]', 'Prints hello in [lang]. Args: name.')
-```
-
-This is useful for aliases which have many permutations. 
-
-### Arguments
-
-TODO: flesh out (and provide decorators)
+* etc...
 
 ## Installation
 
@@ -295,7 +171,7 @@ This virtual environment will only be activated:
 Activate your virtual environment:
 
 ```bash
-source ~/turboshell/virtualenv/bin/activate
+source ~/turboshell/virtualenv/bin/activtooate
 ```
 
 And either run:
@@ -334,18 +210,27 @@ You should see some output which looks like this:
   To load them into this shell session just run the above command at the prompt.
   You should then be able to run:
 
-      turboshell.info
+      ts.info
 
 ```
 
-Follow these instructions. If you ever move your turboshell directory, just run step 4 again.
+Follow the printed instructions. If you ever move your turboshell directory, just run step 4 again.
+
+## User Guide
+
+See [USER_GUIDE.md](./USER_GUIDE.md).
 
 ## Contributing
 
-PRs welcome. Please run flake8. 
+PRs welcome. Run tests with:
 
-If you're thinking of rewriting this using decorators, you'll get stung.
+```
+$ py.test
+```
+
+Please also run flake8.
 
 ## Licence
 
 [MIT](https://opensource.org/licenses/MIT)
+
