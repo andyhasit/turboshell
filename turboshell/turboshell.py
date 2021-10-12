@@ -1,3 +1,4 @@
+import os
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdSpecificationException
 
@@ -76,11 +77,11 @@ class TurboshellSingleton:
         for entry in items:
             self.alias(*entry)
 
-    def func(self, name, lines, info=None, group=None):
+    def func(self, name, body, info=None, group=None):
         """
         Add a single function.
         """
-        self.functions[name] = lines
+        self.functions[name] = body.split(os.linesep)
         if info:
             self.info(name, info, group)
 

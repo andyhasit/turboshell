@@ -86,10 +86,10 @@ class FileGenerator:
         add = self.lines.append
         add("# Your functions:")
         add(" ")
-        for name, body in functions.items():
+        for name, lines in functions.items():
             self.unique_alises.add(name)
             add("function " + name + " {")
-            for line in body:
+            for line in lines:
                 add("  " + line)
             add("}")
         add(" ")
