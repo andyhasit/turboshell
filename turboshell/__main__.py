@@ -6,7 +6,7 @@ import os
 import sys
 from .utils import error, TURBOSHELL_USER_DIR
 from .turboshell import ts
-
+from .constants import REBUILD_CMD
 # The following import collects the commands and aliases
 from . import builtin_cmds  # noqa
 
@@ -16,21 +16,23 @@ def call_command(argv):
     Calls a custom (user-defined) command.
     """
     try:
-        name = argv[1]
-        args = argv[2:]
+        cmd_name = argv[1]
+        cmd_args = argv[2:]
     except IndexError:
         error('Use: "python -m turboshell cmd-name [...args]"')
 
     if TURBOSHELL_USER_DIR and os.path.isdir(TURBOSHELL_USER_DIR):
         sys.path.append(TURBOSHELL_USER_DIR)
-        # As for builtin_cmds, this collects the commands and aliases
+
+        if cmd_name == REBUILD_CMD:
+            print(cmd_args)
         import scripts  # noqa
 
-    if name in ts.commands:
-        cmd = ts.commands[name]
-        cmd(args)
+    if cmd_name in ts.commands:
+        cmd = ts.commands[cmd_name]
+        cmd(cmd_args)
     else:
-        error('Turboshell could not find command "{}"'.format(name))
+        error('Turboshell could not find command "{}"'.format(cmd_name))
 
 
 def print_help():

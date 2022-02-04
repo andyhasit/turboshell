@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+from turboshell.constants import REBUILD_CMD
 from .file_generator import FileGenerator
 from .utils import TURBOSHELL_USER_DIR, ensure_dir_exists
 from .turboshell import ts
@@ -53,8 +54,8 @@ def configure():
     print("")
 
 
-@ts.cmd()
-def rebuild():
+@ts.cmd(name=REBUILD_CMD)
+def rebuild(*args):
     """
     Rebuilds the alias file.
     """

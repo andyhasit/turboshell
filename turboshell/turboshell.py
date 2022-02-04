@@ -1,6 +1,7 @@
 import os
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdSpecificationException
+from .utils import get_full_name
 
 
 class TurboshellSingleton:
@@ -13,7 +14,7 @@ class TurboshellSingleton:
         self.group_info = {}
         self.alias_groups = {}
 
-    def cmd(self, alias=None, args=None, kwargs=None, name=None, options=None, info=None, group=None):
+    def cmd(self, alias=None, args=None, nargs=False, kwargs=None, name=None, options=None, info=None, group=None):
         """
         A decorator which:
             - registers the function as a command
@@ -22,18 +23,21 @@ class TurboshellSingleton:
         def wrap(original_function):
 
             # Be careful not to assign over name as that makes it a local variable
-            cmd_name = name or original_function.__name__
+            cmd_name = name or get_full_name(original_function)
 
             def wrapped_f(shell_args):
+                """
+                This is the function which finally gets executed.
+                """
                 if requesting_help(shell_args):
                     print_help(original_function, args, kwargs, alias, cmd_name)
                 else:
                     try:
-                        final_args = convert_args(shell_args, args, kwargs)
-                        if final_args:
-                            original_function(**final_args)
+                        if args or kwargs:
+                            final_args = convert_args(shell_args, args, kwargs)
+                            return original_function(**final_args)
                         else:
-                            original_function()
+                            original_function(*shell_args)
                     except CmdArgException as e:
                         print(e)
                     except CmdSpecificationException as e:
@@ -56,6 +60,8 @@ class TurboshellSingleton:
         @alias creates an alias for the command.
         @info is only used if alias is also provided.
         """
+        if name in self.commands:
+            raise CmdSpecificationException('Command with name "{}" already exists'.format(name))
         self.commands[name] = function
         if alias:
             self.alias(alias, 'turboshell ' + name)
@@ -77,11 +83,16 @@ class TurboshellSingleton:
         for entry in items:
             self.alias(*entry)
 
-    def func(self, name, body, info=None, group=None):
+    def func(self, name, *lines, info=None, group=None):
         """
         Add a single function.
         """
-        self.functions[name] = body.split(os.linesep)
+        clean_lines = []
+        for line in lines:
+            clean_lines.extend(line.split(os.linesep))
+        clean_lines = [line.strip() for line in clean_lines]
+        clean_lines = [line for line in clean_lines if line != ""]
+        self.functions[name] = clean_lines
         if info:
             self.info(name, info, group)
 

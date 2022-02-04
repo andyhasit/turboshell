@@ -1,12 +1,15 @@
 import os
 from datetime import datetime
-from .utils import write_to_file, ensure_dir_exists, extract_stubs
+from turboshell.constants import REBUILD_CMD
+from turboshell.utils import write_to_file, ensure_dir_exists, extract_stubs
 
 
 class FileGenerator:
     """
     A class for generating the command and alias files.
     """
+
+    # TODO: break this up
 
     def __init__(self, conf_dir):
         self.conf_dir = conf_dir
@@ -69,7 +72,11 @@ class FileGenerator:
         add(" ")
         add(self.turboshell_alias_line)
         add("alias ts.activate-venv='source {}/bin/activate'".format(self.venv_dir))
-        add("alias ts.rebuild='turboshell rebuild && source {}'".format(self.definitions_file))
+        add("alias ts.rebuild='turboshell {} $* && source {}'".format(REBUILD_CMD, self.definitions_file))
+        self._write_function('ts.rebuild', 
+            "turboshell {} $*".format(REBUILD_CMD),
+            "source {}".format(self.definitions_file)
+        )
         add("alias ts.reload='source {}'".format(self.definitions_file))
         add(" ")
 
@@ -88,10 +95,15 @@ class FileGenerator:
         add(" ")
         for name, lines in functions.items():
             self.unique_alises.add(name)
-            add("function " + name + " {")
-            for line in lines:
-                add("  " + line)
-            add("}")
+            self._write_function(name, *lines)
+        add(" ")
+
+    def _write_function(self, name, *lines):
+        add = self.lines.append
+        add("function " + name + " {")
+        for line in lines:
+            add("  " + line)
+        add("}")
         add(" ")
 
     def _add_stubs(self):
