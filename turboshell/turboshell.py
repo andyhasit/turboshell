@@ -14,30 +14,33 @@ class TurboshellSingleton:
         self.group_info = {}
         self.alias_groups = {}
 
-    def cmd(self, alias=None, args=None, nargs=False, kwargs=None, name=None, options=None, info=None, group=None):
+    def cmd(self, alias=None, arg=None, args=None, kwargs=None, name=None, info=None, group=None):
         """
         A decorator which:
             - registers the function as a command
             - transforms the shell args passed to the function
         """
-        def wrap(original_function):
+        # use functools
+        def wrap(func):
 
             # Be careful not to assign over name as that makes it a local variable
-            cmd_name = name or get_full_name(original_function)
+            cmd_name = name or get_full_name(func)
 
             def wrapped_f(shell_args):
                 """
                 This is the function which finally gets executed.
                 """
                 if requesting_help(shell_args):
-                    print_help(original_function, args, kwargs, alias, cmd_name)
+                    print_help(func, args, kwargs, alias, cmd_name)
                 else:
                     try:
-                        if args or kwargs:
+                        if arg:
+                            func(" ".join(shell_args))
+                        elif args or kwargs:
                             final_args = convert_args(shell_args, args, kwargs)
-                            return original_function(**final_args)
+                            func(**final_args)
                         else:
-                            original_function(*shell_args)
+                            func(*shell_args)
                     except CmdArgException as e:
                         print(e)
                     except CmdSpecificationException as e:
@@ -47,7 +50,7 @@ class TurboshellSingleton:
             self.command(wrapped_f, cmd_name, alias=alias, info=info, group=group)
 
             # In case we inspect the function's name elsewhere...
-            wrapped_f.__name__ = original_function.__name__
+            wrapped_f.__name__ = func.__name__
 
             return wrapped_f
 

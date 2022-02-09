@@ -4,12 +4,16 @@ This module gets run when you call "python -m turboshell"
 
 import os
 import sys
-from .utils import error, TURBOSHELL_USER_DIR
+from .utils import error
+from .env_vars import TURBOSHELL_USER_DIR
 from .turboshell import ts
 from .constants import REBUILD_CMD
-# The following import collects the commands and aliases
 from . import builtin_cmds  # noqa
 
+builtin_cmd_names = [
+    "init",
+    "rebuild"
+]
 
 def call_command(argv):
     """
@@ -21,26 +25,24 @@ def call_command(argv):
     except IndexError:
         error('Use: "python -m turboshell cmd-name [...args]"')
 
-    if TURBOSHELL_USER_DIR and os.path.isdir(TURBOSHELL_USER_DIR):
-        sys.path.append(TURBOSHELL_USER_DIR)
-
-        if cmd_name == REBUILD_CMD:
-            print(cmd_args)
-        import scripts  # noqa
+    if cmd_name not in ts.commands:
+        if TURBOSHELL_USER_DIR and os.path.isdir(TURBOSHELL_USER_DIR):
+            sys.path.append(TURBOSHELL_USER_DIR)
+            import scripts  # noqa
 
     if cmd_name in ts.commands:
         cmd = ts.commands[cmd_name]
         cmd(cmd_args)
     else:
-        error('Turboshell could not find command "{}"'.format(cmd_name))
+        error('Could not find Turboshell command "{}"'.format(cmd_name))
 
 
-def print_help():
+def print_instructions():
     print('Type turboshell.info for a list of commands.')
 
 
 argv = sys.argv
 if len(argv) == 1 or argv[1].lower().strip('-') in ('?', 'h', 'help'):
-    print_help()
+    print_instructions()
 else:
     call_command(argv)

@@ -1,6 +1,6 @@
 import pytest
 from turboshell.arg_utils import convert_args, CmdArgException
-from .utils import f
+from ..utils import f
 
 
 def test_fails_with_unknown_named_arg():

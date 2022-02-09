@@ -2,16 +2,21 @@ import os
 import sys
 import shutil
 from turboshell.constants import REBUILD_CMD
+from .env_vars import TURBOSHELL_USER_DIR
 from .file_generator import FileGenerator
-from .utils import TURBOSHELL_USER_DIR, ensure_dir_exists
+from .utils import ensure_dir_exists
 from .turboshell import ts
 
 
-@ts.cmd()
-def configure():
+@ts.cmd(name='init')
+def init():
     """
-    This command is called by user during installation, and whenever their turboshell directory moves.
+    This command is called by user during installation, and whenever their
+    turboshell user directory moves.
     """
+
+    print(999)
+    return
     target_dir = os.getcwd()
     this_dir = os.path.dirname(sys.argv[0])
     contrib_dir = os.path.join(os.path.dirname(this_dir), 'contrib')

@@ -1,1 +1,1 @@
-REBUILD_CMD = "__turboshell.rebuild__"
+REBUILD_CMD = "rebuild"

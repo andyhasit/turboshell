@@ -1,0 +1,4 @@
+import os
+
+TURBOSHELL_USER_DIR = os.environ.get('TURBOSHELL_USER_DIR')
+TURBOSHELL_VENV_DIR = os.environ.get('TURBOSHELL_VENV_DIR')

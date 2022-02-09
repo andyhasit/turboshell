@@ -84,7 +84,8 @@ class FileGenerator:
         add = self.lines.append
         add("# Your aliases:")
         add(" ")
-        for name, cmd in aliases.items():
+        for name in sorted(aliases):
+            cmd =  aliases[name]
             self.unique_alises.add(name)
             add("alias {}='{}'".format(name, cmd))
         add(" ")
@@ -93,7 +94,8 @@ class FileGenerator:
         add = self.lines.append
         add("# Your functions:")
         add(" ")
-        for name, lines in functions.items():
+        for name in sorted(functions):
+            lines = functions[name]
             self.unique_alises.add(name)
             self._write_function(name, *lines)
         add(" ")

@@ -4,9 +4,6 @@ import sys
 import subprocess
 
 
-TURBOSHELL_USER_DIR = os.environ.get('TURBOSHELL_USER_DIR')
-
-
 def error(msg):
     print(msg)
     sys.exit(1)
