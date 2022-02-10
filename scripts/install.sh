@@ -126,6 +126,7 @@ python -m turboshell init
 #
 # Add lines to shell rc file
 #
+echo "Adding to your $RC_FILE"
 echo "\n" >> $RC_FILE
 echo "# Turboshell variables:" >> $RC_FILE
 echo "export TURBOSHELL_VENV_DIR=$TURBOSHELL_VENV_DIR" >> $RC_FILE

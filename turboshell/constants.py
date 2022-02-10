@@ -1,1 +1,0 @@
-REBUILD_CMD = "rebuild"

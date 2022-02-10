@@ -1,14 +1,29 @@
 import os
 import sys
 import shutil
-from turboshell.constants import REBUILD_CMD
-from .env_vars import TURBOSHELL_USER_DIR
-from .file_generator import FileGenerator
-from .utils import ensure_dir_exists
+from .vars import TURBOSHELL_VENV_DIR, USER_DEFINITIONS_FILE, TURBOSHELL_USER_DIR, REBUILD_CMD
+from .utils import is_empty, ensure_dir_exists
 from .turboshell import ts
 
-ts.alias("ts.meh", "echo meh")
 
+if ts.is_collecting:
+    
+    turboshell_func_lines = ["python -m turboshell $*"]
+
+    if not is_empty(TURBOSHELL_VENV_DIR):
+
+        ts.alias("ts.venv.activate", f"source '{TURBOSHELL_VENV_DIR}/bin/activate'")
+    
+        turboshell_func_lines.insert(0, "ts.venv.activate")
+
+    ts.func("turboshell", *turboshell_func_lines)
+
+    ts.alias("ts.reload", f"source {USER_DEFINITIONS_FILE}")
+    ts.func("ts.rebuild", 
+        f"turboshell {REBUILD_CMD} $*",
+        "ts.reload"
+    )
+    ts.alias("ts.help", f"echo coming!!!")
 
 
 @ts.cmd(name='init')
@@ -19,17 +34,19 @@ def init():
     target_dir = os.getcwd()
     this_dir = os.path.dirname(sys.argv[0])
     contrib_dir = os.path.join(os.path.dirname(this_dir), 'contrib')
-    filegen = FileGenerator(target_dir)
+    
+
+    #filegen = FileGenerator(target_dir)
     #alias_file = filegen.definitions_file
 
     # Copy files in contrib to user's scripts (doesn't overwrite if they exist)
-    # scripts_dir = os.path.join(target_dir, 'scripts')
-    # ensure_dir_exists(scripts_dir)
-    # for file in os.listdir(contrib_dir):
-    #     source = os.path.join(contrib_dir, file)
-    #     target = os.path.join(scripts_dir, file)
-    #     if not os.path.exists(target):
-    #         shutil.copy(source, target)
+    ensure_dir_exists(scripts_dir)
+    for file in os.listdir(contrib_dir):
+        source = os.path.join(contrib_dir, file)
+        target = os.path.join(TURBOSHELL_USER_DIR, file)
+        #os.makedirs(os.path.dirname(filePath), exist_ok=True)
+        if not os.path.exists(target):
+            shutil.copy(source, target)
 
     # Ensure turboshell alias points to correct script
     # We don't want to overwrite their whole file, just redefine the alias in case it points to an old location

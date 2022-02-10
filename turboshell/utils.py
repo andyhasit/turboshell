@@ -4,6 +4,20 @@ import sys
 import subprocess
 
 
+def print_instructions():
+    print('Type ts.info for a list of commands.')
+
+
+def is_empty(var):
+    """
+    Returns True if a variable is None or an empty string.
+    """
+    if var is None:
+        return True
+    if isinstance(var, str):
+        return len(var.strip()) == 0
+
+
 def error(msg):
     print(msg)
     sys.exit(1)
@@ -13,6 +27,7 @@ def write_to_file(path, lines):
     with open(path, 'w') as f:
         for line in lines:
             f.write(line + '\n')
+            #print(line)
 
 
 def ensure_dir_exists(path):

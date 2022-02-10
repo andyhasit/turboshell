@@ -2,17 +2,23 @@ import os
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdSpecificationException
 from .utils import get_full_name
+from .settings import Settings
 
 
 class TurboshellSingleton:
 
     def __init__(self):
+        self.is_collecting = False
+        self.settings = Settings()
         self.aliases = {}
         self.functions = {}
         self.commands = {}
         self.info_entries = {}
         self.group_info = {}
         self.alias_groups = {}
+
+    def set(self, **kwargs):
+        self.settings.set(**kwargs)
 
     def cmd(self, alias=None, arg=None, args=None, kwargs=None, name=None, info=None, group=None):
         """
