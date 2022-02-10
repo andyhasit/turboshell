@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
+
 from turboshell.constants import REBUILD_CMD
+from turboshell.env_vars import TURBOSHELL_VENV_DIR
 from turboshell.utils import write_to_file, ensure_dir_exists, extract_stubs
 
 
@@ -13,37 +15,18 @@ class FileGenerator:
 
     def __init__(self, conf_dir):
         self.conf_dir = conf_dir
-        self.venv_dir = os.environ.get('VIRTUAL_ENV')
-        self.generated_files_dir = os.path.join(self.conf_dir, 'generated')
-        self.script_file = os.path.join(self.generated_files_dir, 'turboshell')
-        self.definitions_file = os.path.join(self.generated_files_dir, 'definitions')
+        self.build_dir = os.path.join(self.conf_dir, 'build')
+        self.definitions_file = os.path.join(self.build_dir, 'definitions')
         self.lines = []
         self.unique_alises = set()
 
     def generate_alias_file(self, aliases, functions, info_entries, alias_groups, group_info):
-        ensure_dir_exists(self.generated_files_dir)
+        ensure_dir_exists(self.build_dir)
         start = datetime.now()
         self._build_alias_file(aliases, functions, info_entries, alias_groups, group_info)
         end = datetime.now()
         time = (end - start).microseconds / 1000
         print("Generated {} aliases in {} ms".format(len(aliases), time))
-
-    def generate_turboshell_script(self):
-        """
-        Builds the excutable script "turboshell"
-        """
-        ensure_dir_exists(self.generated_files_dir)
-        import stat
-        write_to_file(self.script_file, [
-            'source {}/bin/activate'.format(self.venv_dir),
-            'TURBOSHELL_USER_DIR={} python -m turboshell $*'.format(self.conf_dir)
-        ])
-        st = os.stat(self.script_file)
-        os.chmod(self.script_file, st.st_mode | stat.S_IEXEC)
-
-    @property
-    def turboshell_alias_line(self):
-        return "alias turboshell='bash {}'".format(self.script_file)
 
     def _build_alias_file(self, aliases, functions, info_entries, alias_groups, group_info):
         self._add_headers()
@@ -70,8 +53,11 @@ class FileGenerator:
         add = self.lines.append
         add("# Built-in aliases:")
         add(" ")
-        add(self.turboshell_alias_line)
-        add("alias ts.activate-venv='source {}/bin/activate'".format(self.venv_dir))
+        self._write_function('turboshell',
+            "source '{}/bin/activate'".format(TURBOSHELL_VENV_DIR),
+            "python -m turboshell $*"
+        )
+        add("alias ts.venv.activate='source {}/bin/activate'".format(TURBOSHELL_VENV_DIR))
         add("alias ts.rebuild='turboshell {} $* && source {}'".format(REBUILD_CMD, self.definitions_file))
         self._write_function('ts.rebuild', 
             "turboshell {} $*".format(REBUILD_CMD),

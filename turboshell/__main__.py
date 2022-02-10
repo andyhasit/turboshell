@@ -6,14 +6,29 @@ import os
 import sys
 from .utils import error
 from .env_vars import TURBOSHELL_USER_DIR
+from .file_generator import FileGenerator
 from .turboshell import ts
 from .constants import REBUILD_CMD
-from . import builtin_cmds  # noqa
 
-builtin_cmd_names = [
-    "init",
-    "rebuild"
-]
+
+@ts.cmd(name="build", args=["module", "out"])
+def build(module, out):
+    """
+    Rebuilds an alias file.
+    """
+    print(999)
+    # filegen = FileGenerator(TURBOSHELL_USER_DIR)
+    # filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries, ts.alias_groups, ts.group_info)
+
+
+@ts.cmd(name=REBUILD_CMD)
+def rebuild(*args):
+    """
+    Rebuilds the user alias file.
+    """
+    filegen = FileGenerator(TURBOSHELL_USER_DIR)
+    filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries, ts.alias_groups, ts.group_info)
+
 
 def call_command(argv):
     """
@@ -24,7 +39,14 @@ def call_command(argv):
         cmd_args = argv[2:]
     except IndexError:
         error('Use: "python -m turboshell cmd-name [...args]"')
+    
+    # These are special cases 
+    if cmd_name in ["build", "rebuild"]:
+        cmd = ts.commands[cmd_name]
+        cmd(cmd_args)
+        return
 
+    from . import builtin_cmds  # noqa
     if cmd_name not in ts.commands:
         if TURBOSHELL_USER_DIR and os.path.isdir(TURBOSHELL_USER_DIR):
             sys.path.append(TURBOSHELL_USER_DIR)
