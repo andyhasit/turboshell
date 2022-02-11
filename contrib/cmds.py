@@ -1,10 +1,12 @@
+"""
+This is the module where you define your commands.
 
+"""
 from turboshell import ts
 
-
 if ts.is_collecting:
-    ts.alias("test.foo", "echo foo")
-    print('Collecting')
+    print("Collecting definitions")
+    ts.alias("test", "echo foo")
 
 
 @ts.cmd(alias="test.bar")

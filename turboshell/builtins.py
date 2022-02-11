@@ -1,19 +1,25 @@
 import os
 import sys
 import shutil
-from .vars import TURBOSHELL_VENV_DIR, USER_DEFINITIONS_FILE, TURBOSHELL_USER_DIR, REBUILD_CMD
-from .utils import is_empty, ensure_dir_exists
+from .rebuild import rebuild
 from .turboshell import ts
+from .utils import is_empty, split_cmd_shortcut
+from .vars import (
+    TURBOSHELL_VENV_DIR,
+    USER_DEFINITIONS_FILE,
+    REBUILD_CMD,
+    NO_CMD_MATCH,
+    CMD_SEP
+)
 
 
-if ts.is_collecting:
-    
+def generate_builtins():
     turboshell_func_lines = ["python -m turboshell $*"]
 
     if not is_empty(TURBOSHELL_VENV_DIR):
 
         ts.alias("ts.venv.activate", f"source '{TURBOSHELL_VENV_DIR}/bin/activate'")
-    
+
         turboshell_func_lines.insert(0, "ts.venv.activate")
 
     ts.func("turboshell", *turboshell_func_lines)
@@ -24,54 +30,81 @@ if ts.is_collecting:
         "ts.reload"
     )
     ts.alias("ts.help", f"echo coming!!!")
+    ts.func('ts.list_dotted',
+        'cat <(alias | cut -d= -f1 | cut -d\' \' -f2 | grep "\.") <(declare -F | cut -d \' \' -f3 | grep "\.")'
+    )
+    ts.func('ts.find',
+        'ts.list_dotted | turboshell find $* | tee /dev/tty | tail -n 1'
+    )
+    # https://www.linuxjournal.com/content/bash-command-not-found
+    # TODO: maybe use stderr to avoid print out?
+    ts.func('command_not_found_handle',
+        'CMD=$(ts.list_dotted | turboshell find $* | tee /dev/tty | tail -n 1)',
+        f'if [ ! "$CMD" = "{NO_CMD_MATCH}" ]; then',
+        '  eval $CMD',
+        'else',
+        '  return 127',
+        'fi',
+    )
+
+
+if ts.is_collecting:
+    generate_builtins()
 
 
 @ts.cmd(name='init')
 def init():
     """
-    Creates inital files in current directory
+    Creates inital files in current directory.
     """
     target_dir = os.getcwd()
     this_dir = os.path.dirname(sys.argv[0])
     contrib_dir = os.path.join(os.path.dirname(this_dir), 'contrib')
-    
 
-    #filegen = FileGenerator(target_dir)
-    #alias_file = filegen.definitions_file
+    for root, dirs, files in os.walk(contrib_dir):
+        for d in dirs:
+            source = os.path.join(root, d)
+            target = source.replace(contrib_dir, target_dir)
+            os.makedirs(target, exist_ok=True)
+        for file in files:
+            source = os.path.join(root, file)
+            target = source.replace(contrib_dir, target_dir)
+            if not os.path.exists(target):
+                shutil.copy(source, target)
+                print(f"Created: {target}")
+    generate_builtins()
+    rebuild(())
 
-    # Copy files in contrib to user's scripts (doesn't overwrite if they exist)
-    ensure_dir_exists(scripts_dir)
-    for file in os.listdir(contrib_dir):
-        source = os.path.join(contrib_dir, file)
-        target = os.path.join(TURBOSHELL_USER_DIR, file)
-        #os.makedirs(os.path.dirname(filePath), exist_ok=True)
-        if not os.path.exists(target):
-            shutil.copy(source, target)
 
-    # Ensure turboshell alias points to correct script
-    # We don't want to overwrite their whole file, just redefine the alias in case it points to an old location
-    # if os.path.isfile(alias_file):
-    #     with open(alias_file, 'a') as fp:
-    #         fp.write("\n# These lines were added by configure command to ensure alias 'turboshell'\
-    #                  points to the correct file.")
-    #         fp.write('\n# They will be deleted on rebuild.')
-    #         fp.write('\n{}\n'.format(filegen.turboshell_alias_line))
-    # else:
-    #     filegen.generate_alias_file({}, {}, {}, {}, {})
-
-    #filegen.generate_alias_file({}, {}, {}, {}, {})
-    filegen.generate_alias_file(ts.aliases, ts.functions, ts.info_entries, ts.alias_groups, ts.group_info)
-
-    print("Files generated")
-
-    # print("  ---------------------------------")
-    # print("  TURBOSHELL SUCCESSFULLY INSTALLED")
-    # print("  ---------------------------------")
-    # print("\n  Add the following line to your shell initialisation file (e.g. ~/.bashrc or ~/.zshrc)")
-    # print("\n     source '{}'".format(alias_file))
-    # print("\n  This will load your aliases into new shell sessions.")
-    # print("  To load them into this shell session just run the above command at the prompt.")
-    # print("  You should then be able to run:")
-    # print("\n      turboshell.info")
-    # print("")
-
+@ts.cmd(name="find")
+def find_command(*args):
+    """
+    Finds a command shortcut by splitting on "."
+    """
+    if len(args) == 0:
+        return
+    cmd_chunks = split_cmd_shortcut(args[0])
+    chunk_count = len(cmd_chunks)
+    if chunk_count < 2:
+        return
+    matches = []
+    for line in sys.stdin:
+        line_chunks = line.split(CMD_SEP)
+        if len(line_chunks) < chunk_count:
+            continue
+        chunk_match = 0
+        for cmd_chunk, line_chunk in zip(cmd_chunks, line_chunks):
+            if not line_chunk.startswith(cmd_chunk):
+                continue
+            chunk_match += 1
+        if chunk_match == chunk_count:
+            matches.append(line.strip())
+    if len(matches) == 1:
+        print(matches[0])
+    elif len(matches) > 1:
+        print("Turboshell found multiple matches:")
+        print()
+        for match in matches:
+            print(' ', match)
+        print()
+        print(NO_CMD_MATCH)

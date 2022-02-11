@@ -2,6 +2,34 @@ import os
 import inspect
 import sys
 import subprocess
+from .vars import CMD_SEP
+
+
+def split_cmd_shortcut(cmd):
+    """
+    Splits a cmd shortcut into chunks:
+
+        n.p.a     >   ['n', 'p', 'a']
+        .npa      >   ['n', 'p', 'a']
+        n.pa      >   ['n', 'pa']
+        .n.pa     >   ['n', 'pa']
+
+    """
+    final = []
+    chunks = cmd.split(CMD_SEP)
+    splitnext = False
+    for chunk in chunks:
+        if splitnext:
+            for c in chunk:
+                final.append(c)
+            splitnext = False
+            continue
+        if chunk == '':
+            splitnext = True
+        else:
+            final.append(chunk)
+            splitnext = False
+    return final
 
 
 def print_instructions():
