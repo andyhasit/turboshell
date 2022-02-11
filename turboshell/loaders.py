@@ -9,8 +9,8 @@ def load_user_cmds():
         sys.path.append(TURBOSHELL_USER_DIR)
         try:
             import cmds  # noqa
-        except ModuleNotFoundError:
-            error(f'Expected to find Python module "cmds" in {TURBOSHELL_USER_DIR}')
+        except ModuleNotFoundError as err:
+            error(f'Error importing {err} path: {sys.path}')
     else:
         error(f'Could not find directory {TURBOSHELL_USER_DIR}')
 

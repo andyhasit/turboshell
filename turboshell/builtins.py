@@ -37,11 +37,18 @@ def generate_builtins():
         'ts.list_dotted | turboshell find $* | tee /dev/tty | tail -n 1'
     )
     # https://www.linuxjournal.com/content/bash-command-not-found
+    # https://stackoverflow.com/questions/5370260/how-to-change-current-working-directory-inside-command-not-found-handle
     # TODO: maybe use stderr to avoid print out?
     ts.func('command_not_found_handle',
+        #'shopt -s autocd',
         'CMD=$(ts.list_dotted | turboshell find $* | tee /dev/tty | tail -n 1)',
+        # f'if [[ $CMD = cd* ]]; then',
+        # 'echo 888',
+        # ' echo "${CMD:2:*}"',
+        # ' echo "${CMD#*cd.}"',
+        'cd /other',
         f'if [ ! "$CMD" = "{NO_CMD_MATCH}" ]; then',
-        '  eval $CMD',
+        '  eval "$CMD"',
         'else',
         '  return 127',
         'fi',

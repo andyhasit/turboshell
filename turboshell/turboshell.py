@@ -5,7 +5,7 @@ from .utils import get_full_name
 from .settings import Settings
 
 
-class TurboshellSingleton:
+class Turboshell:
 
     def __init__(self):
         self.is_collecting = False
@@ -26,7 +26,7 @@ class TurboshellSingleton:
             - registers the function as a command
             - transforms the shell args passed to the function
         """
-        # use functools
+        # TODO: use functools
         def wrap(func):
 
             # Be careful not to assign over name as that makes it a local variable
@@ -121,4 +121,4 @@ class TurboshellSingleton:
 
 
 # This is a global object to which all modules add their aliases
-ts = TurboshellSingleton()
+ts = Turboshell()
