@@ -1,0 +1,4 @@
+if [[ $TURBOSHELL_VENV_DIR ]]; then
+  source $TURBOSHELL_VENV_DIR/bin/activate
+fi
+python -m turboshell $*

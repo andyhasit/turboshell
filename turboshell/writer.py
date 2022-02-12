@@ -36,7 +36,7 @@ class Writer:
             load_builtin_cmds()
             if not self.settings.handle_not_found:
                 self.ts.functions.pop("command_not_found_handle")
-                
+
         self._add_definitions()
         if self.settings.add_info:
             self._add_info_function(self.ts.info_entries, self.ts.alias_groups, self.ts.group_info)

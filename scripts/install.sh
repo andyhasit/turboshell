@@ -131,6 +131,7 @@ echo "\n" >> $RC_FILE
 echo "# Turboshell variables:" >> $RC_FILE
 echo "export TURBOSHELL_VENV_DIR=$TURBOSHELL_VENV_DIR" >> $RC_FILE
 echo "export TURBOSHELL_USER_DIR=$TURBOSHELL_USER_DIR" >> $RC_FILE
+echo 'alias turboshell="bash $TURBOSHELL_USER_DIR/build/turboshell"' >> $RC_FILE
 echo "source \$TURBOSHELL_USER_DIR/build/definitions" >> $RC_FILE
 
 #
