@@ -2,10 +2,9 @@
 The module which runs when you call "python -m turboshell"
 """
 import sys
-from .loaders import load_builtin_cmds, load_user_cmds
+from .loaders import load_builder_cmds, load_builtin_cmds, load_user_cmds
 from .turboshell import ts
 from .utils import error, print_instructions
-from .rebuild import rebuild
 
 
 def call_command(argv):
@@ -18,13 +17,13 @@ def call_command(argv):
     except IndexError:
         error('You must provide a command name')
     
-    if cmd_name == "rebuild":
-        rebuild(cmd_args)
-        return
-    
-    load_builtin_cmds()
-    if cmd_name not in ts.commands:
-        load_user_cmds()
+    if cmd_name in ["build", "rebuild"]:
+        # Do this separately as we may not want to include builtins
+        load_builder_cmds()
+    else:   
+        load_builtin_cmds()
+        if cmd_name not in ts.commands:
+            load_user_cmds()
     if cmd_name in ts.commands:
         cmd = ts.commands[cmd_name]
         cmd(cmd_args)

@@ -99,7 +99,8 @@ class Turboshell:
         clean_lines = []
         for line in lines:
             clean_lines.extend(line.split(os.linesep))
-        clean_lines = [line.strip() for line in clean_lines]
+        # clean_lines = [line.strip() for line in clean_lines]
+        clean_lines = [line.rstrip() for line in clean_lines]
         clean_lines = [line for line in clean_lines if line != ""]
         self.functions[name] = clean_lines
         if info:

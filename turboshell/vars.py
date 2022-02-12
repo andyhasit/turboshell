@@ -7,6 +7,7 @@ TURBOSHELL_EXEC = os.path.join(TURBOSHELL_USER_DIR, 'build', 'turboshell')
 USER_MODULE_NAME = 'cmds'
 REBUILD_CMD = "rebuild"
 NO_CMD_MATCH = "---no-match---"
+SUB_SHELL_WARNING = "---sub-shell-warning---"
 CMD_SEP = "."
 
 # The name for the run last cmd alias (for command_not_found_handle)

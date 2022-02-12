@@ -1,7 +1,7 @@
 import os
 import sys
 import shutil
-from .rebuild import rebuild
+from .builders import rebuild
 from .turboshell import ts
 from .utils import is_empty, split_cmd_shortcut
 from .vars import (
@@ -12,7 +12,11 @@ from .vars import (
     RUN_LAST_FOUND_CMD,
     TURBOSHELL_VENV_DIR,
     USER_DEFINITIONS_FILE,
+    SUB_SHELL_WARNING
 )
+
+
+no_subshell = ["ts.rebuild", "ts.load"]
 
 
 def generate_builtins():
@@ -21,7 +25,7 @@ def generate_builtins():
     """
 
     ts.func("ts.rebuild", f"turboshell {REBUILD_CMD} $*", "ts.load", 
-        info="Rebuilds the alias file and loads it.")
+        info="Rebuilds the user definitions from cmds and loads them.")
     ts.alias("ts.load", f"source {USER_DEFINITIONS_FILE}")
     ts.alias("ts.help", f"ts.info")
 
@@ -35,7 +39,7 @@ def generate_builtins():
     )
     # A way to check what the command matcher will return
     ts.func('ts.match',
-        'ts.list_dotted | turboshell find $*'
+        'ts.list_dotted | turboshell match $*'
     )
     # "command_not_found_handle" is called by bash when a command is not found.
     # Here we check if the command has CMD_SEP, if so look for matches, and 
@@ -45,8 +49,16 @@ def generate_builtins():
     # the alias "u".
     ts.func('command_not_found_handle',
         'if [[ $1 == *{}* ]] ; then'.format(CMD_SEP),
-        '  CMD=$(ts.list_dotted | turboshell find $* | tee /dev/tty | tail -n 1)',
-        '  if [ ! "$CMD" = "{}" ]; then'.format(NO_CMD_MATCH),
+        '  CMD=$(ts.list_dotted | turboshell match $* | tee /dev/tty | tail -n 1)',
+        '  if [[ $CMD == *{}* ]]; then'.format(SUB_SHELL_WARNING),
+        '    shift',
+        '    CMD=$( cut -d " " -f 2- <<< "$CMD" )',
+        '    echo $CMD "$@" > {}'.format(LAST_FOUND_CMD_FILE),
+        '    echo Turboshell cannot run this command in a sub shell:',
+        '    echo "> $CMD $@"',
+        '    echo Run it in the current shell with this command:',
+        '    echo "> {}"'.format(RUN_LAST_FOUND_CMD),
+        '  elif [ ! "$CMD" = "{}" ]; then'.format(NO_CMD_MATCH),
         '    shift',
         '    echo $CMD "$@" > {}'.format(LAST_FOUND_CMD_FILE),
         '    eval $CMD "$@"',
@@ -63,10 +75,17 @@ def _no_match():
     sys.exit(0)
 
 
-@ts.cmd(name="find")
-def find_command(*args):
+def _dont_run_in_subshell(match):
     """
-    Finds a command shortcut by splitting on "."
+    Returns true if we advise against runnin in a subshell.
+    """
+    return match in no_subshell or match.startswith('cd.') or match.endswith('.cd')
+
+
+@ts.cmd(name="match")
+def match_command(*args):
+    """
+    Matches a command shortcut by splitting on "."
     If no command is found, the last line printed must be NO_CMD_MATCH.
     """
     try:
@@ -89,7 +108,11 @@ def find_command(*args):
             if chunk_match == chunk_count:
                 matches.append(line.strip())
         if len(matches) == 1:
-            print(matches[0])
+            match = matches[0]
+            if _dont_run_in_subshell(match):
+                print(SUB_SHELL_WARNING, match)
+            else:
+                print(match)
             sys.exit(0)
         elif len(matches) > 1:
             print("Turboshell found multiple matches:")
