@@ -10,9 +10,10 @@ from .vars import (
     LAST_FOUND_CMD_FILE,
     NO_CMD_MATCH,
     RUN_LAST_FOUND_CMD,
+    TURBOSHELL_USER_DIR,
     TURBOSHELL_VENV_DIR,
-    USER_DEFINITIONS_FILE,
-    SUB_SHELL_WARNING
+    USER_RC_FILE,
+    NO_SUBSHELL
 )
 
 
@@ -26,8 +27,9 @@ def generate_builtins():
 
     ts.func("ts.rebuild", f"turboshell {REBUILD_CMD} $*", "ts.load", 
         info="Rebuilds the user definitions from cmds and loads them.")
-    ts.alias("ts.load", f"source {USER_DEFINITIONS_FILE}")
+    ts.alias("ts.load", f"source {USER_RC_FILE}")
     ts.alias("ts.help", f"ts.info")
+    ts.alias("ts.home", f'cd "{TURBOSHELL_USER_DIR}"')
 
     if not is_empty(TURBOSHELL_VENV_DIR):
         ts.alias("ts.venv.activate", f"source '{TURBOSHELL_VENV_DIR}/bin/activate'")
@@ -50,7 +52,7 @@ def generate_builtins():
     ts.func('command_not_found_handle',
         'if [[ $1 == *{}* ]] ; then'.format(CMD_SEP),
         '  CMD=$(ts.list_dotted | turboshell match $* | tee /dev/tty | tail -n 1)',
-        '  if [[ $CMD == *{}* ]]; then'.format(SUB_SHELL_WARNING),
+        '  if [[ $CMD == *{}* ]]; then'.format(NO_SUBSHELL),
         '    shift',
         '    CMD=$( cut -d " " -f 2- <<< "$CMD" )',
         '    echo $CMD "$@" > {}'.format(LAST_FOUND_CMD_FILE),
@@ -110,7 +112,7 @@ def match_command(*args):
         if len(matches) == 1:
             match = matches[0]
             if _dont_run_in_subshell(match):
-                print(SUB_SHELL_WARNING, match)
+                print(NO_SUBSHELL, match)
             else:
                 print(match)
             sys.exit(0)

@@ -16,6 +16,7 @@ class Turboshell:
         self.info_entries = {}
         self.group_info = {}
         self.alias_groups = {}
+        self.vars = {}
 
     def set(self, **kwargs):
         self.settings.set(**kwargs)
@@ -119,6 +120,12 @@ class Turboshell:
         Create a group for grouping info lines.
         """
         self.group_info[name] = lines
+
+    def group(self, name, value):
+        """
+        Define a variable
+        """
+        self.vars[name] = value
 
 
 # This is a global object to which all modules add their aliases
