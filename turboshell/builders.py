@@ -1,4 +1,4 @@
-from .vars import USER_RC_FILE, REBUILD_CMD
+from .vars import USER_DEFINITIONS_FILE, REBUILD_CMD
 from .loaders import load_user_cmds
 from .turboshell import ts
 from .utils import error
@@ -13,7 +13,7 @@ def rebuild():
     ts.is_collecting = True
     ts.settings.set(include_builtins=True)
     load_user_cmds()
-    target = USER_RC_FILE
+    target = USER_DEFINITIONS_FILE
     writer = Writer(ts, target)
     writer.write()
 

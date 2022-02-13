@@ -1,0 +1,10 @@
+# --- This is the turboshell script ---
+#
+# You should have an alias called "turboshell" which runs this script:
+#
+#    alias turboshell="bash /path/to/this/file"
+
+if [[ $TURBOSHELL_VENV_DIR ]]; then
+  source $TURBOSHELL_VENV_DIR/bin/activate
+fi
+python -m turboshell $*

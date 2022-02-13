@@ -1,0 +1,16 @@
+# --- This is the Turboshell initialisation file ---
+#
+# Source this file your .bashrc or .zshrc file:
+#
+#     source /path/to/this/file
+#
+# If you ever move your turboshell directory, either run this:
+#
+#     $ python -m init
+#
+# From the new directory, or update the variables below:
+
+export TURBOSHELL_VENV_DIR=/home/andrew/.pyenv/versions/turboshell
+export TURBOSHELL_USER_DIR=/home/andrew/turboshell
+alias turboshell="bash $TURBOSHELL_USER_DIR/shell/turboshell"
+source $TURBOSHELL_USER_DIR/shell/definitions

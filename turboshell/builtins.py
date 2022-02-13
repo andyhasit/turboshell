@@ -14,7 +14,7 @@ from .vars import (
     RUN_LAST_FOUND_CMD,
     TURBOSHELL_USER_DIR,
     TURBOSHELL_VENV_DIR,
-    USER_RC_FILE,
+    USER_INIT_FILE,
     NO_SUBSHELL
 )
 
@@ -29,7 +29,7 @@ def generate_builtins():
 
     ts.func("ts.rebuild", f"turboshell {REBUILD_CMD} $*", "ts.load", 
         info="Rebuilds the user definitions from cmds and loads them.")
-    ts.alias("ts.load", f"source {USER_RC_FILE}")
+    ts.alias("ts.load", f"source {USER_INIT_FILE}")
     ts.alias("ts.help", f"ts.info")
     ts.alias("ts.home", f'cd "{TURBOSHELL_USER_DIR}"')
 
@@ -145,7 +145,7 @@ def init():
     """
     target_dir = os.getcwd()
     this_dir = os.path.dirname(sys.argv[0])
-    contrib_dir = os.path.join(os.path.dirname(this_dir), 'contrib')
+    contrib_dir = os.path.join(os.path.dirname(this_dir), 'seed')
 
     for root, dirs, files in os.walk(contrib_dir):
         for d in dirs:
