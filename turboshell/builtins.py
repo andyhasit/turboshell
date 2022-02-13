@@ -8,10 +8,10 @@ from .utils import is_empty, split_cmd_shortcut, write_to_file
 from .vars import (
     CMD_SEP,
     REBUILD_CMD,
-    LAST_FOUND_CMD_FILE,
+    FOUND_CMDS_FILE,
     LIMIT_CMD_MATCH,
     NO_CMD_MATCH,
-    RUN_LAST_FOUND_CMD,
+    RUN_FOUND_CMD,
     TURBOSHELL_USER_DIR,
     TURBOSHELL_VENV_DIR,
     USER_INIT_FILE,
@@ -59,18 +59,19 @@ def generate_builtins():
         '    echo "Turboshell won\'t run this command in a sub shell:"',
         '    echo "> $CMD $@"',
         '    echo Run it in the current shell with this command:',
-        '    echo "> {}"'.format(RUN_LAST_FOUND_CMD),
+        '    echo "> {}"'.format(RUN_FOUND_CMD),
         '  elif [ ! "$CMD" = "{}" ]; then'.format(NO_CMD_MATCH),
         '    shift',
         '    eval $CMD "$@"',
         '  fi',
         'fi',
+        'echo Command not found',
         'return 127',
     )
-    # Alias to run what is in LAST_FOUND_CMD_FILE
-    ts.func(RUN_LAST_FOUND_CMD, 
+    # Alias to run a found command
+    ts.func(RUN_FOUND_CMD, 
         'N=$1',
-        'eval $(tail -n+$N {} | head -n1)'.format(LAST_FOUND_CMD_FILE)
+        'eval $(tail -n+$N {} | head -n1)'.format(FOUND_CMDS_FILE)
         )
 
 
@@ -113,7 +114,7 @@ def match_command(*args):
                 chunk_match += 1
             if chunk_match == chunk_count:
                 matches.append(line.strip())
-        write_to_file(LAST_FOUND_CMD_FILE, matches[:LIMIT_CMD_MATCH])
+        write_to_file(FOUND_CMDS_FILE, matches[:LIMIT_CMD_MATCH])
         match_count = len(matches)
         if match_count == 1:
             match = matches[0]

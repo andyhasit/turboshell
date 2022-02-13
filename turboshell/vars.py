@@ -16,7 +16,7 @@ CMD_SEP = "."
 LIMIT_CMD_MATCH = int(os.environ.get('LIMIT_CMD_MATCH', 5))
 
 # The name for the run last cmd alias (for command_not_found_handle)
-RUN_LAST_FOUND_CMD = os.environ.get('TURBOSHELL_RUN_LAST_FOUND_CMD', 'u')
+RUN_FOUND_CMD = os.environ.get('TURBOSHELL_RUN_FOUND_CMD', 'u')
 
 # Where the last cmd is stored (for command_not_found_handle)
-LAST_FOUND_CMD_FILE="/tmp/turboshell_last_found"
+FOUND_CMDS_FILE="/tmp/turboshell_last_found"
