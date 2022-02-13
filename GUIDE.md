@@ -1,13 +1,142 @@
 # Turboshell User Guide
 
+## Installation
+
+If your system Python is 3.6 or above and you're happy for us to create a directory called
+
+```shell
+$ sh -c "$(curl -fsSL https://raw.github.com/andyhasit/turboshell/master/install.sh)"
+```
 
 
 
+##### 1. directory
+
+Create a directory for your files:
+
+```bash
+$ mkdir ~/turboshell
+$ cd ~/turboshell
+```
+
+##### 2. virtual environment
+
+Create a virtual environment with Python 3.6 or above:
+
+```bash
+$ python3 -m .venv
+$ source .venv/bin/activate
+```
+
+> Do this however you like. If you don't have a copy of Python 3.6 or above on your machine, I recommend using [pyenv](https://github.com/pyenv/pyenv) to install one.
+
+##### 3. pip install
+
+Install `turboshell`:
+
+```bash
+$ pip install turboshell
+```
+
+##### 4. init
+
+Run the following command:
+
+```bash
+$ python -m turboshell init
+```
+
+This will generate the following structure in your directory:
+
+```
+cmds.py
+build/
+  definitions
+```
+
+##### 5. rc file
+
+That last command will have printed some lines similar to these:
+
+```bash
+export TURBOSHELL_VENV_DIR=/home/andrew/turboshell/.venv
+export TURBOSHELL_USER_DIR=/home/andrew/turboshell
+source $TURBOSHELL_USER_DIR/build/definitions
+```
+
+> There's a slim chance your name is also Andrew.
+
+Which you need to add to your **.bashrc** or **.zshrc** file. If you ever move your directories, just update these.
+
+##### 6. test
+
+Open a new shell session and type this:
+
+```bash
+$ ts.info
+```
+
+You should see meaningful output.
 
 
 
+## How does it work?
 
+Whenever you change the contents of the **cmds.py** file or any module it imports:
 
+```python
+from turboshell import load, alias
+
+@load
+def gen_aliases():
+	alias("tia", "echo Turboshell is awesome!")
+```
+
+Just run this command:
+
+```bash
+$ ts.rebuild
+```
+
+Which will:
+
+* Import the **cmds** module
+* Rebuild the **definitions** file
+* Source the **definitions** file
+
+Your new command is now available in the current shell:
+
+```bash
+$ tia
+Turboshell is awesome!
+```
+
+#### Notes on source
+
+The [source](https://ss64.com/bash/source.html) command only affects the current shell context. If you want to load the new or updated definitions in another shell context, you need source the file there too. 
+
+Of course, Turboshell has an alias for that:
+
+```bash
+$ ts.reload
+```
+
+New shell sessions source from your **.bashrc** file so will always load the latest definitions.
+
+#### Notes on Python
+
+Turboshell *imports* your **cmds** module, which executes any top level code.
+
+You **cmds** module import other modules, which may also define aliases.
+
+```python
+from turboshell.contrib.git import *
+from acme.cmds import *
+```
+
+This is how plugins work.
+
+There's nothing magical, and you can probably figure out how everything works by looking at those files.
 
 Manual
 

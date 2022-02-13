@@ -21,16 +21,18 @@ class Writer:
         self._build_file()
         end = datetime.now()
         time = (end - start).microseconds / 1000
-        print(f"Generated file: {self.target}")
-        print(f"Time: {time} ms")
+        print(f"Turboshell built file:")
+        print(f"\n  {self.target}")
+        print(f"\nWith:\n")
         for line in self.report_lines:
             print(line)
+        print(f"\nIn {time} ms")
     
     def line(self, line):
         self.lines.append(line)
 
     def report(self, number, type):
-        self.report_lines.append(f"{number} {type}")
+        self.report_lines.append(f"  - {number} {type}")
 
     def _build_file(self):
         if self.settings.include_header:

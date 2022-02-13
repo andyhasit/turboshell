@@ -2,151 +2,177 @@
 
 *Turbocharge your shell with Python!*
 
-## What is this?
+## What is it?
 
 Turboshell is a Python library which helps you do three things:
 
-1. Generate shell aliases
+1. Generate shell commands from Python
 
-2. Map aliases to Python functions
+2. Map commands to Python functions
 
 3. Achieve superhuman productivity
 
-Think of it as [ohmyz.sh](https://ohmyz.sh/) on steroids, and which also works in bash.
+If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
 
 ## Installation
 
-If your system Python is 3.6 or above and you're happy for us to create a directory called
+Turboshell can generate ad hoc alias files (for specific servers, projects etc...) but the primary usage is managing your personal aliases, and that requires a bit of installation.
+
+Don't worry, it's quick, unobtrusive, and easily removed. Just run this in your shell (bash or zsh):
 
 ```shell
 $ sh -c "$(curl -fsSL https://raw.github.com/andyhasit/turboshell/master/install.sh)"
 ```
 
+This will:
 
+* Create a directory at a location of your choice, and dump a few files there.
+* Create a virtual environment (optional but recommended).
+* Add a line to your **.bashrc** or **.zshrc** file.
 
-##### 1. directory
+Alternatively see the [user guide]() for manual instructions.
 
-Create a directory for your files:
+## Quick start
 
-```bash
-$ mkdir ~/turboshell
-$ cd ~/turboshell
-```
+There should now be two sub-directories in your **turboshell** directory:
 
-##### 2. virtual environment
+* **/cmds** - the python files which you edit.
+* **/shell** - the generated shell files which you don't edit.
 
-Create a virtual environment with Python 3.6 or above:
-
-```bash
-$ python3 -m .venv
-$ source .venv/bin/activate
-```
-
-> Do this however you like. If you don't have a copy of Python 3.6 or above on your machine, I recommend using [pyenv](https://github.com/pyenv/pyenv) to install one.
-
-##### 3. pip install
-
-Install `turboshell`:
-
-```bash
-$ pip install turboshell
-```
-
-##### 4. init
-
-Run the following command:
-
-```bash
-$ python -m turboshell init
-```
-
-This will generate the following structure in your directory:
-
-```
-cmds.py
-build/
-  definitions
-```
-
-##### 5. rc file
-
-That last command will have printed some lines similar to these:
-
-```bash
-export TURBOSHELL_VENV_DIR=/home/andrew/turboshell/.venv
-export TURBOSHELL_USER_DIR=/home/andrew/turboshell
-source $TURBOSHELL_USER_DIR/build/definitions
-```
-
-> There's a slim chance your name is also Andrew.
-
-Which you need to add to your **.bashrc** or **.zshrc** file. If you ever move your directories, just update these.
-
-##### 6. test
-
-Open a new shell session and type this:
-
-```bash
-$ ts.info
-```
-
-You should see meaningful output.
-
-## How does it work?
-
-Whenever you change the contents of the **cmds.py** file or any module it imports:
+Open **cmds/my_cmds.py** and make some changes:
 
 ```python
-from turboshell import load, alias
+from turboshell import ts
 
-@load
-def gen_aliases():
-	alias("tia", "echo Turboshell is awesome!")
+ts.alias("test.1", "echo Testing 1", info="A simple alias")
+
+@ts.cmd(alias="test.2", info="Calls a Python function")
+def speak():
+    print("Testing 2")
 ```
 
-Just run this command:
+Then run:
 
 ```bash
 $ ts.rebuild
 ```
 
-Which will:
+This command does two things:
 
-* Import the **cmds** module
-* Rebuild the **definitions** file
-* Source the **definitions** file
-
-Your new command is now available in the current shell:
+**1.** It rebuilds the **shell/definitions** file, where you can now see your aliases:
 
 ```bash
-$ tia
-Turboshell is awesome!
+alias test.1='echo Testing 1'
+alias test.2='turboshell cmds.my_cmds.speak'
 ```
 
-#### Notes on source
-
-The [source](https://ss64.com/bash/source.html) command only affects the current shell context. If you want to load the new or updated definitions in another shell context, you need source the file there too. 
-
-Of course, Turboshell has an alias for that:
+**2.** It sources **shell/init** it, which loads your new commands into the current shell session:
 
 ```bash
-$ ts.reload
+$ test.1
+Testing 1
+$ test.2
+Testing 2
 ```
 
-New shell sessions source from your **.bashrc** file so will always load the latest definitions.
+A quick peek at the files should give you a sense of how it works, if not read the details [here]().
 
-#### Notes on Python
+#### Getting help
 
-Turboshell *imports* your **cmds** module, which executes any top level code.
+Run this command:
 
-You **cmds** module import other modules, which may also define aliases.
-
-```python
-from turboshell.contrib.git import *
-from acme.cmds import *
+```bash
+$ ts.help
 ```
 
-This is how plugins work.
+You'll see a listing of available aliases. Note how `test.1` and `test.2` are listed in there too.
+
+Note that you can use bash's built in `type` command to get more info:
+
+```bash
+$ type test.1
+test.1 is aliased to `echo Testing 1'
+$ type turboshell
+turboshell is aliased to `bash /home/andrew/turboshell/build/turboshell'
+```
+
+
+
+#### About the dots
+
+You're encouraged to use **.** as separators in your commands as:
+
+* It looks neat!
+* It avoids clashes.
+* TAB completion makes it feels like typing code in an editor.
+* Turboshell has a matcher which lets you partially type commands.
+
+The matcher lets you type the first n letters of each words between the dots:
+
+```bash
+$ t.1      # Runs test.1
+$ tes.2    # Runs test.2
+$ t.in     # Runs ts.info
+```
+
+If it finds a unique match, it runs that command. If it finds multiple matches, it gives you an easy way to run the one you want:
+
+```
+$ g.s
+Turboshell found multiple matches:
+
+  1. git.show
+  2. git.status
+
+Run your choice with alias 'u' followed by the number, e.g.
+> u 1
+```
+
+So if you wanted git status, you'd type:
+
+```bash
+$ u 2
+```
+
+Alternatively you could just type:
+
+```bash
+$ g.st
+```
+
+Which would only find one match, and therefore run it.
+
+
+
+Order:
+
+bash bad
+
+long cmds
+
+why would you do that?
+
+
+
+If you are only typing one letter from each word you can also type it like this:
+
+This comes in handy when you create longer aliases like:
+
+```bash
+$ projects.acme.backend.pytest
+$ p.a.b.t
+$ .pabt
+```
+
+
+
+This relies on bash's `command_not_found_handle` which you may already have customised. There is a section on this in the user guide. 
+
+#### About bash
+
+This doesn't work for commands like `cd` or `source` because of sub shells.
+
+
 
 ## How can I use it?
 

@@ -46,9 +46,8 @@ def generate_builtins():
     # "command_not_found_handle" is called by bash when a command is not found.
     # Here we check if the command has CMD_SEP, if so look for matches, and 
     # if we find exactly one match we run it.
-    # "command_not_found_handle" runs in a sub-shell, so cd won't work. 
-    # But we copy the command to a temp file and let the user recall it with
-    # the alias "u".
+    # "command_not_found_handle" runs in a sub-shell, so some things won't work.
+    # We try to catch those and let the user run them in their shell.
     ts.func('command_not_found_handle',
         'if [[ $1 == *{}* ]] ; then'.format(CMD_SEP),
         '  CMD=$(ts.list_dotted | turboshell match $* | tee /dev/tty | tail -n 1)',
@@ -56,7 +55,7 @@ def generate_builtins():
         '    shift',
         '    CMD=$( cut -d " " -f 2- <<< "$CMD" )',
         '    echo $CMD "$@" > {}'.format(LAST_FOUND_CMD_FILE),
-        '    echo Turboshell cannot run this command in a sub shell:',
+        '    echo "Turboshell won\'t run this command in a sub shell:"',
         '    echo "> $CMD $@"',
         '    echo Run it in the current shell with this command:',
         '    echo "> {}"'.format(RUN_LAST_FOUND_CMD),
@@ -79,7 +78,9 @@ def _no_match():
 
 def _dont_run_in_subshell(match):
     """
-    Returns true if we advise against runnin in a subshell.
+    Returns True if command should not be run in a subshell, because we want
+    the effect to apply to the current shell. 
+    So things like "cd" or "source" etc...
     """
     return match in no_subshell or match.startswith('cd.') or match.endswith('.cd')
 
