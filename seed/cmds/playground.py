@@ -1,8 +1,7 @@
 """
-This is the module where you define your commands.
+Use this module as a playground to experiment with turboshell.
 """
 from turboshell import ts
-
 
 ts.alias("test.1", "echo Testing 1", info="A simple alias")
 

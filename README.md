@@ -14,6 +14,20 @@ Turboshell is a Python library which helps you do three things:
 
 If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
 
+## What is it?
+
+Turboshell is a Python library for generating shell aliases., loaded with goodies to 
+
+
+
+1. Generate shell commands from Python
+
+2. Map commands to Python functions
+
+3. Achieve superhuman productivity
+
+If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
+
 ## Installation
 
 Turboshell can generate ad hoc alias files (for specific servers, projects etc...) but the primary usage is managing your personal aliases, and that requires a bit of installation.
@@ -36,10 +50,10 @@ Alternatively see the [user guide]() for manual instructions.
 
 There should now be two sub-directories in your **turboshell** directory:
 
-* **/cmds** - the python files which you edit.
-* **/shell** - the generated shell files which you don't edit.
+* **/cmds** - the python files (which you edit)
+* **/shell** - the generated shell files (which you don't edit)
 
-Open **cmds/my_cmds.py** and make some changes:
+Open **cmds/playground.py** and make some changes:
 
 ```python
 from turboshell import ts
@@ -143,7 +157,7 @@ Which would only find one match, and therefore run it.
 
 Turboshell comes with a handful of builtin commands, which all start wit `ts.` except for `u` which is a special command used to run a found command.
 
-You can of course configure these aliases, as well as most other things in Turboshell.
+You can configure these aliases, as well as most other things in Turboshell.
 
 
 

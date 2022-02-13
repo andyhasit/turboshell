@@ -1,4 +1,5 @@
 import os
+import functools
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdSpecificationException
 from .utils import get_full_name
@@ -27,12 +28,12 @@ class Turboshell:
             - registers the function as a command
             - transforms the shell args passed to the function
         """
-        # TODO: use functools
-        def wrap(func):
 
-            # Be careful not to assign over name as that makes it a local variable
+        def wrap(func):
+            
             cmd_name = name or get_full_name(func)
 
+            @functools.wraps(func)
             def wrapped_f(shell_args):
                 """
                 This is the function which finally gets executed.
@@ -55,10 +56,6 @@ class Turboshell:
                         print(e)
 
             self.command(wrapped_f, cmd_name, alias=alias, info=info, group=group)
-
-            # In case we inspect the function's name elsewhere...
-            wrapped_f.__name__ = func.__name__
-
             return wrapped_f
 
         return wrap
