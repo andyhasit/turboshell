@@ -66,7 +66,7 @@ alias test.1='echo Testing 1'
 alias test.2='turboshell cmds.my_cmds.speak'
 ```
 
-**2.** It sources **shell/init** it, which loads your new commands into the current shell session:
+**2.** It sources **shell/init**, which loads your new commands into the current shell session:
 
 ```bash
 $ test.1

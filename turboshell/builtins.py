@@ -3,11 +3,13 @@ import sys
 import shutil
 from .builders import rebuild
 from .turboshell import ts
-from .utils import is_empty, split_cmd_shortcut
+from .ui import print_list
+from .utils import is_empty, split_cmd_shortcut, write_to_file
 from .vars import (
     CMD_SEP,
     REBUILD_CMD,
     LAST_FOUND_CMD_FILE,
+    LIMIT_CMD_MATCH,
     NO_CMD_MATCH,
     RUN_LAST_FOUND_CMD,
     TURBOSHELL_USER_DIR,
@@ -54,21 +56,22 @@ def generate_builtins():
         '  if [[ $CMD == *{}* ]]; then'.format(NO_SUBSHELL),
         '    shift',
         '    CMD=$( cut -d " " -f 2- <<< "$CMD" )',
-        '    echo $CMD "$@" > {}'.format(LAST_FOUND_CMD_FILE),
         '    echo "Turboshell won\'t run this command in a sub shell:"',
         '    echo "> $CMD $@"',
         '    echo Run it in the current shell with this command:',
         '    echo "> {}"'.format(RUN_LAST_FOUND_CMD),
         '  elif [ ! "$CMD" = "{}" ]; then'.format(NO_CMD_MATCH),
         '    shift',
-        '    echo $CMD "$@" > {}'.format(LAST_FOUND_CMD_FILE),
         '    eval $CMD "$@"',
         '  fi',
         'fi',
         'return 127',
     )
     # Alias to run what is in LAST_FOUND_CMD_FILE
-    ts.alias(RUN_LAST_FOUND_CMD, f'eval $(cat {LAST_FOUND_CMD_FILE})')
+    ts.func(RUN_LAST_FOUND_CMD, 
+        'N=$1',
+        'eval $(tail -n+$N {} | head -n1)'.format(LAST_FOUND_CMD_FILE)
+        )
 
 
 def _no_match():
@@ -110,19 +113,25 @@ def match_command(*args):
                 chunk_match += 1
             if chunk_match == chunk_count:
                 matches.append(line.strip())
-        if len(matches) == 1:
+        write_to_file(LAST_FOUND_CMD_FILE, matches[:LIMIT_CMD_MATCH])
+        match_count = len(matches)
+        if match_count == 1:
             match = matches[0]
             if _dont_run_in_subshell(match):
                 print(NO_SUBSHELL, match)
             else:
                 print(match)
             sys.exit(0)
-        elif len(matches) > 1:
+        elif match_count > 1:
             print("Turboshell found multiple matches:")
             print()
-            for match in matches:
-                print(' ', match)
+            print_list(matches, 1, LIMIT_CMD_MATCH)
             print()
+            if match_count > LIMIT_CMD_MATCH:
+                print(f"Found {match_count - LIMIT_CMD_MATCH} more matches not shown.")
+                print()
+            print("Run your choice with cmd 'u' followed by the number, e.g.")
+            print("> u 1")
             _no_match()
     except Exception as e:
         print(e)

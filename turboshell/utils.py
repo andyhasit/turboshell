@@ -55,7 +55,6 @@ def write_to_file(path, lines):
     with open(path, 'w') as f:
         for line in lines:
             f.write(line + '\n')
-            #print(line)
 
 
 def ensure_dir_exists(path):
