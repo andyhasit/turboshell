@@ -1,7 +1,7 @@
 """
 Validators can be used as argument texts.
 """
-from .exceptions import CmdArgException, CmdSpecificationException
+from .exceptions import CmdArgException, CmdDefinitionException
 
 
 class BaseArgSpec(object):
@@ -51,7 +51,7 @@ class TextArgSpec(BaseArgSpec):
             name = text
         if self.type not in self.CONVERTERS:
             allowed_types = ', '.join(self.CONVERTERS)
-            raise CmdSpecificationException(
+            raise CmdDefinitionException(
                 '{} is not an allowed type. Use one of: {}'.format(self.type, allowed_types)
             )
         required = name.endswith('!')

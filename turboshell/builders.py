@@ -6,11 +6,12 @@ from .writer import Writer
 
 
 @ts.cmd(name=REBUILD_CMD)
-def rebuild():
+def rebuild(*args):
     """
     Reuilds the user definitions file from the user cmds module.
     """
-    ts.is_collecting = True
+    ts.args = args
+    ts.collecting = True
     ts.settings.set(include_builtins=True)
     load_user_cmds()
     target = USER_DEFINITIONS_FILE
@@ -23,7 +24,7 @@ def build(module=None, target=None):
     """
     Builds the target definitions file from the module.
     """
-    ts.is_collecting = True
+    ts.collecting = True
     ts.settings.set(include_builtins=False)
     try:
         __import__(module)

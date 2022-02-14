@@ -1,15 +1,22 @@
 import os
 import functools
 from .arg_utils import convert_args, print_help, requesting_help
-from .exceptions import CmdArgException, CmdSpecificationException
+from .exceptions import CmdArgException, CmdDefinitionException
 from .utils import get_full_name
 from .settings import Settings
+from . import ui
+from . import shell
 
 
 class Turboshell:
+    """
+    The main object accessed by user code.
+    Exposes methods for adding definitions, and access to other apis
+    """
 
     def __init__(self):
-        self.is_collecting = False
+        self.args = ()
+        self.collecting = False
         self.settings = Settings()
         self.aliases = {}
         self.functions = {}
@@ -18,7 +25,14 @@ class Turboshell:
         self.group_info = {}
         self.alias_groups = {}
         self.vars = {}
+        self.ui = ui
+        self.shell = shell
 
+    def var(self, name, func):
+        cmd_name = get_full_name(func)
+        self.cmd(name=cmd_name)(func)
+        return f"{name}=$(turboshell {cmd_name} $*)"
+        
     def set(self, **kwargs):
         self.settings.set(**kwargs)
 
@@ -36,7 +50,7 @@ class Turboshell:
             @functools.wraps(func)
             def wrapped_f(shell_args):
                 """
-                This is the function which finally gets executed.
+                This function parses the shell_args and calls the command's function.
                 """
                 if requesting_help(shell_args):
                     print_help(func, args, kwargs, alias, cmd_name)
@@ -51,7 +65,7 @@ class Turboshell:
                             func(*shell_args)
                     except CmdArgException as e:
                         print(e)
-                    except CmdSpecificationException as e:
+                    except CmdDefinitionException as e:
                         print('Error with command definition')
                         print(e)
 
@@ -68,7 +82,7 @@ class Turboshell:
         @info is only used if alias is also provided.
         """
         if name in self.commands:
-            raise CmdSpecificationException('Command with name "{}" already exists'.format(name))
+            raise CmdDefinitionException('Command with name "{}" already exists'.format(name))
         self.commands[name] = function
         if alias:
             self.alias(alias, 'turboshell ' + name)
@@ -97,7 +111,6 @@ class Turboshell:
         clean_lines = []
         for line in lines:
             clean_lines.extend(line.split(os.linesep))
-        # clean_lines = [line.strip() for line in clean_lines]
         clean_lines = [line.rstrip() for line in clean_lines]
         clean_lines = [line for line in clean_lines if line != ""]
         self.functions[name] = clean_lines

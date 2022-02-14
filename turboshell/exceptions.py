@@ -2,13 +2,13 @@
 
 class CmdArgException(BaseException):
     """
-    Exception to raise when args incorrectly specified in shell.
+    For when args are incorrectly specified in shell.
     """
     pass
 
 
-class CmdSpecificationException(BaseException):
+class CmdDefinitionException(BaseException):
     """
-    Exception to raise when args incorrectly specified by function.
+    For issues with a command definition.
     """
     pass

@@ -1,8 +1,10 @@
 
-def print_list(items, start=None, stop=None):
+def print_list(items, start=None, stop=None, out=None):
     """
     Prints a list, optionally numbered.
     """
+    if out is None:
+        out = print
     for i, item in enumerate(items, 0):
         if stop and (i + 1) > stop:
             break
@@ -10,6 +12,6 @@ def print_list(items, start=None, stop=None):
             number = start + i
             space = 3 - len(str(number))
             pad = " " * space
-            print(f"  {pad}{number} - {item}")
+            out(f"  {pad}{number} - {item}")
         else:
-            print(f"  {item}")
+            out(f"  {item}")
