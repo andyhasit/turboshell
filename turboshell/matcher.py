@@ -19,18 +19,19 @@ def find_matching_commands(args, definitions, add_run_instructions):
     def out(line=''):
         output.append(line)
     
-    if len(args) == 1:
+    if len(args) >= 1:
         cmd = args[0]
-        run = not cmd.endswith(".")
+        if add_run_instructions:
+            run = not cmd.endswith(".")
         cmd_chunks = split_cmd_shortcut(args[0])
-        if len(cmd_chunks) > 1:
+        if len(cmd_chunks) > 0:
             _find_matches(matches, cmd_chunks, definitions)
             write_to_file(FOUND_CMDS_FILE, matches[:LIMIT_CMD_MATCH])
-            _build_output(matches, out, add_run_instructions)
+            _build_output(matches, out, run, add_run_instructions)
         else:
             out(f"Can only match command with '{CMD_SEP}' in name.")
     else:
-        out("Match requires exactly one argument")
+        out("No command name supplied")
     return matches, output, run
 
 
@@ -48,33 +49,40 @@ def _find_matches(matches, cmd_chunks, definitions):
         if chunk_match == chunk_count:
             matches.append(line.strip())
 
-# TODO: move to TS
-no_subshell = ["ts.rebuild", "ts.load"]
+
 def _dont_run_in_subshell(match):
     """
     Returns True if command should not be run in a subshell, typically because
     we want the effect to apply to the current shell. 
     So things like "cd" or "source" etc...
     """
-    return match in no_subshell or match.startswith('cd.') or match.endswith('.cd')
+    return match in ts.no_subshell or match.startswith('cd.') or match.endswith('.cd')
 
 
-def _build_output(matches, out, add_run_instructions):
+def _build_output(matches, out, run, add_run_instructions):
     match_count = len(matches)
     if match_count == 0:
-        out("Turboshell found 0 matches.")
+        out("Found 0 matches.")
     elif match_count == 1:
         match = matches[0]
         if _dont_run_in_subshell(match):
-            out("Turboshell found a single match:")
+            out("Found a single match:")
             out("")
-            out(f"> {match}")
+            out(f"    1 - {match}")
             out("")
             if add_run_instructions:
                 out("But running it in a sub shell won't work.")
                 out("Type 1 to run it in the current shell.")
         else:
-            out(match)
+            if run:
+                out(match)
+            else:
+                out("Found a single match:")
+                out("")
+                out(f"    1 - {match}")
+                out("")
+                # This line must contain spaces!
+                out("(Not running match as this is search mode)")
     elif match_count > 1:
         out("Turboshell found multiple matches:")
         out()

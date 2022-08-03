@@ -2,31 +2,389 @@
 
 *Turbocharge your shell with Python!*
 
-## What is it?
+## Overview
 
-Turboshell is a Python library which helps you do three things:
+Turboshell brings superhuman productivity to your shell.
 
-1. Generate shell commands from Python
+Unlike [Oh My Zsh](https://ohmyz.sh/):
 
-2. Map commands to Python functions
+* You choose your alias names.
+* It works with plain bash as well as zsh.
+* It lets you easily create shell commands in Python.
+* I don't sell t-shirts (but at 1000 stars I'll start an underwear line).
 
-3. Achieve superhuman productivity
+It does require you to write some (very basic) Python but you'll soon be typing less (and working faster) than with just [Oh My Zsh](https://ohmyz.sh/). You can use both together, but read [this]().
 
-If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
+## Usage
 
-## What is it?
+You can use Turboshell in two ways: **ad hoc** and **integrated** (the juicy version).
 
-Turboshell is a Python library for generating shell aliases., loaded with goodies to 
+### Ad hoc
+
+Easily create definition files with bash aliases, variables and functions from Python code.
+
+Create **my_aliases.py** with the following code:
+
+```python
+import turboshell as ts
+
+for ext in ["js", "py"]:
+    ts.alias(f"grep.{ext}", f"grep -ir $1 --include=\*.{ext}")
+```
+
+Run this (requires Python 3.6 or above):
+
+```bash
+$ pip3 install turboshell
+$ python3 -m turboshell build my_aliases definitions
+```
+
+And it will generate a **definitions** file with this:
+
+```bash
+alias grep.js="grep -ir $1 --include=\*.js"
+alias grep.py="grep -ir $1 --include=\*.py"
+```
+
+If you then load that file with the [source](https://ss64.com/bash/source.html) command:
+
+```bash
+$ source definitions
+```
+
+You'll be have those aliases available in that shell session:
+
+```bash
+$ grep.py turb   # Finds all *.py files with text "turb"
+```
+
+There's several things you can do with **ad hoc** mode:
+
+* Source the definitions file from your **.bashrc** or **.zshrc** file to load aliases in new shell sessions. 
+* Create definition files that only load in certain directories using [direnv](https://direnv.net/).
+* Create definition files that load into ssh sessions.
+
+But to get the most out of Turboshell I really recommend **integrated** mode.
+
+### Integrated
+
+In integrated mode you work with a single definition file which is always loaded in your shell. It requires [installation](#Installation) but you get a few extras:
+
+##### Aliases to work with Turboshell
+
+These are the two you'll use most:
+
+```bash
+$ ts.rebuild    # Rebuild the definitions file and source it
+$ ts.help       # Get help
+```
+
+##### A shorthand notation
+
+This will make more sense shortly, but here it is:
+
+
+```bash
+$ grep.py    # our grep alias from earlier
+$ g.py       # can also be written like this
+$ g.p        # or like this
+$ .gp        # or like this
+```
+
+##### Python integration
+
+Because Bash is useless for anything beyond concatenating strings!
+
+This combination *will* bring you superhuman productivity, but requires you to do something which feels pretty odd at first. Just bear with it, it will soon make sense.
+
+#### Specific namespaced aliases
+
+You're going to generate namespaced aliases for every action you can think of:
+
+```bash
+$ projects.acme.git.status         # run git status in acme
+$ projects.acme.git.log --stat     # run git log in acme
+$ projects.acme.frontend.tests     # run npm test in acme
+$ servers.acme.live.cp tmp.csv     # copy file to live server
+$ servers.acme.dev.ssh             # ssh to dev server
+```
+
+Don't worry:
+
+1. You won't be typing these commands out in full.
+2. You can do this with extremely basic Python.
+3. You can generate and load 10,000+ aliases in milliseconds.
+
+Wherever applicable, make it so you don't have to `cd` first using this trick:
+
+```bash
+alias projects.acme.git.status="cd /projects/acme && git status && cd -"
+```
+
+Reducing how often you `cd` saves time (and the number of shell tabs you keep open). Of course you'd also create an alias to `cd` to each project:
+
+```bash
+$ projects.acme.cd
+```
+
+This is better than normal `cd` as you don't have to think about where you're going or where you're starting from. You may as well create aliases for everywhere you regularly go:
+
+```bash
+$ cd.documents
+$ cd.documents.writing
+$ cd.nginx.available
+```
+
+There's nothing wrong having directory agnostic commands too:
+
+```bash
+$ projects.acme.git.status     # run git status in acme
+$ git.status                   # run git status in current dir
+```
+
+It's also worth baking your most used command options into aliases:
+
+```bash
+$ find.py foo       # find .py files with "foo" in name
+$ grep.js foo       # find "foo" in .{js|ts|tsx|jsx} excluding node_modules
+$ grep.js.cs foo    # as above but case sensitive
+```
+
+And of course the more generic:
+
+```bash
+$ exp             # Open the current directory in your file explorer
+$ readme          # Open README.md in current directory
+$ web             # Open your browser
+$ web.facebook    # Kill your productivity
+$ web.incognito   # Let off some steam
+```
+
+Turboshell includes modules to help you generate a lot of these.
+
+#### Shorthand notation
 
 
 
-1. Generate shell commands from Python
+It also includes `command_not_found_handler` which lets you run a long command like this:
 
-2. Map commands to Python functions
+```bash
+$ projects.acme.frontend.tests
+```
 
-3. Achieve superhuman productivity
+By typing any of these:
 
-If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
+```bash
+$ p.ac.fr.tes     # 1st N letters from each word
+$ p.a.f.t         # 1st letter from each word
+$ .paft           # shorter way of only specifying 1s letter.
+```
+
+Provided only one alias matches that pattern, it runs it.
+
+If multiple aliases match, you can easily pick the one you want:
+
+```bash
+$ g.s
+Turboshell found multiple matches:
+
+  1. git.show
+  2. git.status
+
+Type the number of the command you want to run:
+$ 2
+On branch feature/rewrite
+nothing to commit, working tree clean
+```
+
+Those numbered commands are single-use for safety. If you try to reuse it, you get a warning:
+
+```bash
+$ 2
+You can only use this command after Turboshell matching.
+```
+
+You can also type just part of the command to see what it will match.
+
+Adding `.` at the end prevents it from running the command if it only finds one match:
+
+```bash
+$ g.l.
+Found a single match:
+
+> git.log
+
+(Not running match as this is search mode)
+$
+```
+
+
+
+
+
+So long as you stick to a sensible naming schema like always putting the verb at the end or beginning, you can probably run 95% of your shell commands by typing fewer than 5 letters, and mostly without changing directories.
+
+That's a huge productivity boost, but aliases are limited in what they can do.
+
+#### The Python hack
+
+**Integrated** mode also includes an easy way of running a Python function from an alias.
+
+Say you want a command like this:
+
+```bash
+$ web.stackoverflow 'join strings in bash'
+```
+
+Which opens https://stackoverflow.com/search?q=join+strings+in+bash in your browser.
+
+This entails building the string, which is very simple with Python:
+
+```python
+search = "+".join(args)
+url = f"https://stackoverflow.com/search?q={search}"
+```
+
+If you want to waste 20 minutes figuring out how to do this using bash, feel free to open that link.
+
+There's two ways we can integrate this into a shell command.
+
+The first is by putting all that into a function and using a decorator to create a command out of it:
+
+```python
+@ts.cmd(alias="web.stackoverflow")
+def stackoverflow(*args):
+    search = "+".join(args)
+    url = f"https://stackoverflow.com/search?q={search}"
+    ts.shell.call(f"web {url}")
+```
+
+This creates an alias which tells python to run that function, which then launches the browser in its own process.
+
+The second way is to create a function which *prints* the url:
+
+```python
+def join_args(*args):
+    search = "+".join(args)
+    url = f"https://stackoverflow.com/search?q={search}"
+    print(url)
+```
+
+And then define a *bash* function which calls it and saves the result to a variable:
+
+```python
+ts.func("web.stackoverflow", 
+    ts.shell.var("URL", join_args),
+    "web $URL"
+)
+```
+
+
+
+```
+https://stackoverflow.com/search?q=how+do+i+[bash]
+```
+
+
+
+Turboshell lets you seamlessly call Python from bash and vice versa.
+
+First define a function which joins our string and *prints* the result:
+
+The problem is that bash is such a horrendous language you could spend 20 minutes figuring out how to build that string.
+
+This requires converting `"join strings in bash"` to `"join+strings+in+bash"` which is very simple in Python:
+
+```python
+q = "+".join(args)
+```
+
+Bash by
+
+unfathomably complicated in bash (open that link if you want to see for yourself).
+
+Whereas in Python it looks like this:
+
+
+
+Obviously, the whole 
+
+It's precisely because bash is so horrendous and Python so sleek that we need tools like this.
+
+Turboshell offers two ways of calling Python from the shell. The first is with a bash function:
+
+
+
+```python
+def join_args(args):
+    print("+".join(args))
+
+body = [
+    ts.shell.var("Q", join_args),
+    "web https://stackoverflow.com/search?q=$Q"
+]
+ts.func("web.stackoverflow", *body)
+```
+
+
+
+```bash
+function web.stackoverflow {
+  Q=$(turboshell cmds.playground.args_to_query $*)
+  web https://stackoverflow.com/search?q=$Q
+}
+```
+
+
+
+
+
+
+
+```python
+@ts.cmd(alias="web.stackoverflow")
+def stackoverflow(*args):
+    search = "+".join(args)
+    url = f"https://stackoverflow.com/search?q={search}"
+    ts.shell.call(f"web {url}")
+```
+
+
+
+
+
+Attempting that in bash will make your head spin
+
+Which opens this: https://stackoverflow.com/search?q=how+do+i+center+a+div
+
+Let's face it, bash is a horrendous language - even simple string manipulation can tie you in knots!
+
+Turboshell makes it easy to farm out those bits to Python. 
+
+
+
+```python
+ts.func("web.stackoverflow",
+   "SEARCH=$(python3 -c 'import sys; args=sys.arv; print(args)')",
+   "web https://stackoverflow.com/search?q="
+)
+```
+
+ if you're doing anything other than calling commands.
+
+Even converting this:
+
+
+
+
+
+Turboshell lets you easily shift stuff over to Python.
+
+. Even something as simple as this:
+
+
+
+Is unnecessarily painful, but with Python it's a doddle:
 
 ## Installation
 
@@ -71,9 +429,9 @@ Then run:
 $ ts.rebuild
 ```
 
-This command does two things:
+The rebuild command does two things:
 
-**1.** It rebuilds the **shell/definitions** file, where you can now see your aliases:
+**1.** Rebuilds the **shell/definitions** file, where you can now see your aliases:
 
 ```bash
 alias test.1='echo Testing 1'
@@ -82,7 +440,7 @@ alias test.2='turboshell cmds.my_cmds.speak'
 
 > You'll see a load of other aliases and functions generated by Turboshell.
 
-**2.** It sources **shell/init**, which loads your new commands into the current shell session:
+**2.** Sources **shell/init**, which loads those aliases into the current shell:
 
 ```bash
 $ test.1
@@ -101,7 +459,7 @@ Run this command:
 $ ts.help
 ```
 
-To see the various help commands available. One of the more useful ones is:
+To see the various help commands available. Try this one:
 
 ```bash
 $ ts.info
@@ -113,12 +471,12 @@ Note how `test.1` and `test.2` are listed in there too.
 
 You're encouraged to use **.** as separators in your commands as:
 
-* It looks neat!
+* It looks neat.
 * It reduces clashes.
 * TAB completion makes it feels like typing code in an editor.
 * Turboshell has a matcher which lets you partially type commands.
 
-The matcher lets you type the first n letters of each words between the dots:
+The matcher lets you type the first n letters of each words between the dots. If it finds a unique match, it runs that command:
 
 ```bash
 $ t.1      # Runs test.1
@@ -126,7 +484,7 @@ $ tes.2    # Runs test.2
 $ t.in     # Runs ts.info
 ```
 
-If it finds a unique match, it runs that command. If it finds multiple matches, you can easily run the one you want:
+If it finds multiple matches, you can easily run the one you want:
 
 ```
 $ g.s
@@ -139,25 +497,37 @@ Run your choice with cmd 'u' followed by the number, e.g.
 > u 1
 ```
 
+> You'll need to load these commands separtely. See [Plugins](#Plugins).
+
 So if you wanted git status, you'd type:
 
 ```bash
 $ u 2
 ```
 
-Alternatively you could just type:
+Alternatively you could just type `g.st` which would find `git.status` and run it.
+
+#### Builtins
+
+Turboshell comes with a handful of builtin commands, which all start with `ts.` :
 
 ```bash
-$ g.st
+$ ts.load
+$ ts.info
+$ ts.rebuild
 ```
 
-Which would only find one match, and therefore run it.
+One exception is `u` (short for use) which is used to run a found command.
 
-#### Builtin commands
+You can of course configure these aliases, as well as most other things in Turboshell.
 
-Turboshell comes with a handful of builtin commands, which all start wit `ts.` except for `u` which is a special command used to run a found command.
+#### Plugins
 
-You can configure these aliases, as well as most other things in Turboshell.
+Any Python module which defines commands can be a plugin, so you just need to import it.
+
+```python
+from turboshell.contrib import git, grep
+```
 
 
 

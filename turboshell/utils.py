@@ -52,9 +52,14 @@ def error(msg):
 
 
 def write_to_file(path, lines):
-    with open(path, 'w') as f:
+    with open(path, 'w') as fp:
         for line in lines:
-            f.write(line + '\n')
+            fp.write(line + '\n')
+
+
+def read_from_file(path):
+    with open(path) as fp:
+        return [line.strip() for line in fp.readlines()]
 
 
 def ensure_dir_exists(path):

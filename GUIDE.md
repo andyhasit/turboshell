@@ -1558,3 +1558,169 @@ This command will:
 3. Find the function which you registered with the same name.
 4. Call that function, passing the command line arguments as a list of strings.
 
+
+
+
+
+It does this in 2 steps:
+
+
+
+
+
+tool for generating shell aliases from Python code.
+
+#### Example
+
+The following code:
+
+```python
+import turboshell as ts
+
+for ext in ["js", "py"]:
+    ts.alias(f"grep.{ext}", f"grep -ir $1 --include=\*.{ext}")
+```
+
+Generates these aliases:
+
+```bash
+$ grep.js foo    # finds 'boo' in python files
+$ grep.py bar    # find 'bar' in js files
+```
+
+#### What 
+
+
+
+
+
+Generating aliases helps you do several things:
+
+## What is it?
+
+Turboshell is a Python library which helps you do three things:
+
+1. Generate shell commands from Python
+
+2. Map commands to Python functions
+
+3. Achieve superhuman productivity
+
+If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
+
+## What is it?
+
+Turboshell is a Python library for generating shell aliases.
+
+```python
+base = "/projects"
+for project in os.listdir(base):
+    full_path = os.path.join(base, project)
+    cd_alias = f"projects.{project}.cd"
+    ts.alias(cd_alias, f"cd {full_path}")
+    ts.alias(f"projects.{project}.cd", f"{cd_alias} && git status && cd -")
+```
+
+
+
+#### The Turboshell method
+
+Iterate over lists of projects, directories, file types etc and generate namespaced aliases like this:
+
+```bash
+$ projects.acme.frontend.tests
+```
+
+> The Python code required to do this is as basic as it gets.
+
+Turboshell lets you the above command like so:
+
+```bash
+$ p.a.f.t
+```
+
+Or even like so:
+
+```bash
+$ .paft
+```
+
+Which runs the tests without having to cd into that directory.
+
+
+
+1. Generate shell commands from Python
+
+2. Map commands to Python functions
+
+3. Achieve superhuman productivity
+
+If you're impressed with [ohmyz.sh](https://ohmyz.sh/), prepare to be blown away by **Turboshell**.
+
+
+
+
+
+
+
+
+
+#### Generate aliases
+
+Generate aliases by looping over lists, directory listings or config files, and building strings.
+
+This is child's play with Python, for example:
+
+```python
+import turboshell as ts
+
+projects = {}  # Perhaps from os.listdir, or a JSON file...
+git_cmds = ["status", "log"]
+
+for name, path in projects.items():
+    for cmd in git_cmds:
+    	ts.alias(
+            f"projects.{name}.git.{cmd}",       # the alias name
+            f"cd {path} && git {cmd} && cd -"   # the command to run
+        )
+```
+
+Would generate aliases to run `git status` or `git log` on your projects without changing directory:
+
+```bash
+$ projects.acme.git.status
+$ projects.acme.git.log --stat
+```
+
+The idea is to create specific aliases for all possible actions:
+
+```bash
+$ projects.acme.cd                 # cd to directory
+$ projects.acme.frontend.tests     # run npm test (from anywhere)
+$ servers.acme.live.cp             # copy file to live server
+$ servers.acme.dev.ssh             # ssh to dev server
+```
+
+As well as baking the options you use most often into utility commands:
+
+```bash
+$ find.py foo       # find .py files with "foo" in name
+$ grep.js foo       # find "foo" in .{js|ts|tsx|jsx} excluding node_modules
+$ grep.js.cs foo    # as above but case sensitive
+```
+
+And of course the more generic:
+
+```bash
+$ exp             # Open the current directory in your file explorer
+$ readme          # Open README.md in current directory
+$ web             # Open your browser
+$ web.facebook    # Kill your productivity
+```
+
+Don't worry:
+
+* You only need really basic code.
+* You can rebuild and reload with a single command.
+* Rebuilding and loading 10,000 aliases takes milliseconds.
+* There are plenty plugins and examples (including how to load aliases to server shell sessions)

@@ -13,7 +13,7 @@ NO_SUBSHELL = "---no-subshell---"
 CMD_SEP = "."
 
 
-LIMIT_CMD_MATCH = int(os.environ.get('LIMIT_CMD_MATCH', 5))
+LIMIT_CMD_MATCH = int(os.environ.get('LIMIT_CMD_MATCH', 30))
 
 # The name for the run last cmd alias (for command_not_found_handle)
 RUN_FOUND_CMD = os.environ.get('TURBOSHELL_RUN_FOUND_CMD', 'u')

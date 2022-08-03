@@ -27,8 +27,12 @@ class Turboshell:
         self.vars = {}
         self.ui = ui
         self.shell = shell
+        self.no_subshell = ["ts.rebuild", "ts.load"]
 
     def var(self, name, func):
+        """
+        Calls a function and saves the output to a shell var.
+        """
         cmd_name = get_full_name(func)
         self.cmd(name=cmd_name)(func)
         return f"{name}=$(turboshell {cmd_name} $*)"
@@ -36,7 +40,7 @@ class Turboshell:
     def set(self, **kwargs):
         self.settings.set(**kwargs)
 
-    def cmd(self, alias=None, arg=None, args=None, kwargs=None, name=None, info=None, group=None):
+    def cmd(self, alias=None, arg=None, args=None, kwargs=None, name=None, info=None, group=None, no_subshell=False):
         """
         A decorator which:
             - registers the function as a command
@@ -69,12 +73,12 @@ class Turboshell:
                         print('Error with command definition')
                         print(e)
 
-            self.command(wrapped_f, cmd_name, alias=alias, info=info, group=group)
+            self.command(wrapped_f, cmd_name, alias=alias, info=info, group=group, no_subshell=no_subshell)
             return wrapped_f
 
         return wrap
 
-    def command(self, function, name, alias=None, info=None, group=None):
+    def command(self, function, name, alias=None, info=None, group=None, no_subshell=False):
         """
         Registers a command as "turboshell [name]" where name is the name of the function.
         @name if provided, sets the name of the command, else name of function is used.
@@ -85,17 +89,17 @@ class Turboshell:
             raise CmdDefinitionException('Command with name "{}" already exists'.format(name))
         self.commands[name] = function
         if alias:
-            self.alias(alias, 'turboshell ' + name)
-            if info:
-                self.info(alias, info, group)
+            self.alias(alias, 'turboshell ' + name, info, group, no_subshell)
 
-    def alias(self, name, command, info=None, group=None):
+    def alias(self, name, command, info=None, group=None, no_subshell=False):
         """
         Add a single alias.
         """
         self.aliases[name] = command
         if info:
             self.info(name, info, group)
+        if no_subshell:
+            self.no_subshell.append(name)
 
     def aliases(self, items):
         """
@@ -131,7 +135,7 @@ class Turboshell:
         """
         self.group_info[name] = lines
 
-    def group(self, name, value):
+    def var_(self, name, value): # TODO: figure out where I was going with this....
         """
         Define a variable
         """

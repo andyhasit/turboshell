@@ -4,7 +4,7 @@ import shutil
 from .builders import rebuild
 from .matcher import find_matching_commands
 from .turboshell import ts
-from .utils import error, is_empty, split_cmd_shortcut, write_to_file
+from .utils import is_empty, read_from_file
 from .vars import (
     CMD_SEP,
     REBUILD_CMD,
@@ -25,8 +25,8 @@ def generate_builtins():
     ts.func("ts.rebuild", f"turboshell {REBUILD_CMD} $*", "ts.load", 
         info="Rebuilds the user definitions from cmds and loads them.")
     ts.alias("ts.load", f"source {USER_INIT_FILE}")
-    ts.alias("ts.help", f"ts.info")
-    ts.alias("ts.home", f'cd "{TURBOSHELL_USER_DIR}"')
+    
+    ts.alias("ts.cd", f'cd "{TURBOSHELL_USER_DIR}"')
 
     if not is_empty(TURBOSHELL_VENV_DIR):
         ts.alias("ts.venv.activate", f"source '{TURBOSHELL_VENV_DIR}/bin/activate'")
@@ -74,7 +74,10 @@ def generate_builtins():
         'CMD=$(tail -n+$N {} | head -n1)'.format(FOUND_CMDS_FILE),
         '> {}'.format(FOUND_CMDS_FILE),
         'if [[ ! -z $CMD ]]; then',
+        # TODO: fix this as it flakes out...
+        '  echo $CMD',
         '  eval $CMD',
+        '  history -s $CMD',
         'else',
         '  echo You can only enter numbers after Turboshell matching.',
         'fi'
@@ -107,9 +110,8 @@ def find_match_exec(*args):
             assert space in last_line
         for line in output:
             print(line)
-    except Exception as err:
-        print(err)
-        print("Internal error")
+    except AssertionError:
+        print("Internal error.")
     return
 
 
@@ -118,6 +120,25 @@ def find_match_exec(*args):
     matches, output, run = find_matching_commands(args, sys.stdin, False)
     for line in output:
         print(line)
+
+
+@ts.cmd(alias="ts.help")
+def find_match_exec(*args):
+    if len(args) == 1:
+        arg = args[0]
+        try:
+            cmd_index = int(arg)
+            try:
+                cmd = read_from_file(FOUND_CMDS_FILE)[cmd_index - 1]
+                print(f"Help for: {cmd}")
+                ts.shell.call(f"type {cmd}")
+                # ts.shell.call(f"type ls")
+                # ts.shell.call("ls -l")
+            except IndexError:
+                print(f"{cmd_index} not in found commands")
+            
+        except ValueError:
+            ts.shell.call("ts.info")
 
 
 @ts.cmd(name='init')
