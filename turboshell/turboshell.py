@@ -56,6 +56,7 @@ class Turboshell:
                 """
                 This function parses the shell_args and calls the command's function.
                 """
+                # TODO: this needs a tidy as it's not working as expected.
                 if requesting_help(shell_args):
                     print_help(func, args, kwargs, alias, cmd_name)
                 else:
