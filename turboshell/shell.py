@@ -1,3 +1,4 @@
+import os
 import subprocess
 from .vars import USER_INIT_FILE
 
@@ -7,3 +8,10 @@ def call(command):
     """
     # Don't set shell=True else it loads .bashrc (which we don't want)
     subprocess.call(['/bin/bash', '--rcfile', f'{USER_INIT_FILE}', '-ci', command])
+
+
+def getoutput(command, list=True):
+    out = subprocess.getoutput(command)
+    if list:
+        return out.split(os.linesep)
+    return out

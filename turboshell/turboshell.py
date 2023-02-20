@@ -1,8 +1,8 @@
 import os
 import functools
+from inspect import getmodule
 from .arg_utils import convert_args, print_help, requesting_help
 from .exceptions import CmdArgException, CmdDefinitionException
-from .utils import get_full_name
 from .settings import Settings
 from . import ui
 from . import shell
@@ -33,12 +33,15 @@ class Turboshell:
         """
         Calls a function and saves the output to a shell var.
         """
-        cmd_name = get_full_name(func)
+        cmd_name = self.func_path(func)
         self.cmd(name=cmd_name)(func)
         return f"{name}=$(turboshell {cmd_name} $*)"
         
     def set(self, **kwargs):
         self.settings.set(**kwargs)
+
+    def func_path(self, func):
+        return getmodule(func).__name__ + '.' + func.__name__
 
     def cmd(self, alias=None, arg=None, args=None, kwargs=None, name=None, info=None, group=None, no_subshell=False):
         """
@@ -49,7 +52,7 @@ class Turboshell:
 
         def wrap(func):
             
-            cmd_name = name or get_full_name(func)
+            cmd_name = name or self.func_path(func)
 
             @functools.wraps(func)
             def wrapped_f(shell_args):

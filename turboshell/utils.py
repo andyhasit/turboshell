@@ -1,5 +1,4 @@
 import os
-import inspect
 import sys
 import subprocess
 from .vars import CMD_SEP
@@ -78,7 +77,3 @@ def extract_stubs(alias):
         current += bit + '.'
         combinations.append(current)
     return combinations
-
-
-def get_full_name(func):
-    return inspect.getmodule(func).__name__ + '.' + func.__name__

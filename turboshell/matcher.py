@@ -62,7 +62,7 @@ def _dont_run_in_subshell(match):
 def _build_output(matches, out, run, add_run_instructions):
     match_count = len(matches)
     if match_count == 0:
-        out("Found 0 matches.")
+        out("Turboshell: found 0 matches.")
     elif match_count == 1:
         match = matches[0]
         if _dont_run_in_subshell(match):
